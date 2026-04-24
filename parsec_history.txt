@@ -1,0 +1,34 @@
+12.02.2026
+Вер 1.0.0.
+Начал учет версий.
+Документ скопирован с Хедлайнера.
+Программа показывает очередь задач. С этой очередью работает приложение C:\IntegrationClient\Service\ParsecIntegrationClient.exe
+Очередь задач формируется триггерами на события:
+		
+CARDIDX			CARDIDX_BI			(:id_cardindev, new.id_db,new.id_card,new.devidx,new.id_dev,1, :id_pep, :id_cardtype)
+CARDIDX			CARDIDX_AD			(old.id_db,old.id_card,old.devidx,old.id_dev,2, :id_pep, :id_cardtype)
+people			PEOPLE_AI0			(1,NULL,NULL,NULL,3,0,new.id_pep)
+PEOPLE			PEOPLE_AD0			(1,old.guid,NULL,NULL,4,0,old.id_pep)
+ORGANIZATION	ORGANIZATION_AI0	(1,new.guid,NULL,NULL,5,0, 1)
+ORGANIZATION	ORGANIZATION_BD0	(1,old.guid,NULL,NULL,6,0,1)
+SS_ACCESSUSER	SS_ACCESSUSER_AI0	(1,new.id_accessname,NULL,NULL,7,0,new.id_pep)
+SS_ACCESSUSER	SS_ACCESSUSER_AD0	(1,old.id_accessname,NULL,NULL,8,0,old.id_pep)
+		
+		
+		
+Коды операций(команд)		
+Значение поля Operation	Действие 	Вариант 1.	Вариант 2.
+1	Записать карту в устройство	+	Исключить передачу данных в таблицу cardindev. Это задача СКУД.
+-
+2	Удалить карту из устройства	+	
+3	Добавление пользователя	+	+
+4	Удаление пользователя	+	+
+5	Добавление организации	+	+
+6	Удаление организации	+	+
+7	Присвоение категории доступа карте	+	+
+8	Удаление категории доступа	+	+
+9	Добавить карту пиплу		+
+10	Удалить карту у пипла.		+
+
+		
+ 
