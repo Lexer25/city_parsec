@@ -11,158 +11,99 @@ class Model_Parsec extends Model {
 	public function get_task_list()
 	{
 	
-			$sql='SELECT 
-				cd.id_cardindev as id, 
-				cd.id_card, 
-				cd.id_pep, 
-				cd.operation, 
-				cd.attempts, 
-				cd.time_stamp,
-				 CASE
-				  WHEN cd.operation = 1 THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)
-			  WHEN cd.operation = 5 THEN (SELECT o.name   FROM organization o WHERE o.guid = cd.id_card)
-			  WHEN cd.operation = 3 THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)
-			  WHEN cd.operation = 7 THEN (
-					SELECT first 1 p.name||\' \'||p.surname||\' \'||p.patronymic||\' (\'||c.id_card||\') "\'||an.name||\'"\'  FROM people p
-					left join card c on c.id_pep=p.id_pep
-					left join accessname an on an.id_accessname=cd.id_card
-					WHERE p.id_pep = cd.id_pep)
-			  END as org_name,
-			   case
-			  when cd.operation = 1 then (
-				select s.name from device d
-				join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
-				join server s on s.id_server=d2.id_server
-				where d.id_dev=cd.id_dev
-				)
-			  when cd.operation = 2 then (select s.name from device d
-				join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
-				join server s on s.id_server=d2.id_server
-				where d.id_dev=cd.id_dev)
-			  when cd.operation = 3 then (select s.name from server s
-				join servertypelist stl on stl.id_server =s.id_server
-				join servertype sst on sst.id=stl.id_type
-				where sst.sname=\'parsec\' )
-			  when cd.operation = 4 then (4)
-			  when cd.operation = 5 then (select s.name from server s
-				join servertypelist stl on stl.id_server =s.id_server
-				join servertype sst on sst.id=stl.id_type
-				where sst.sname=\'parsec\')
-			  when cd.operation = 6 then (6)
-			  when cd.operation = 7 then (select first 1 s.name from access  a
-				join device d on d.id_dev=a.id_dev
-				 join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
-				 join server s on s.id_server=d2.id_server
-					where a.id_accessname=cd.id_card)
-			  
-			  when cd.operation = 8 then (select first 1 s.name from access  a
-				join device d on d.id_dev=a.id_dev
-				 join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
-				 join server s on s.id_server=d2.id_server
-					where a.id_accessname=cd.id_card)
-			  
-			  
-			  end as dest
-			  
-				
-			FROM cardindev cd 
+						
+$sql='SELECT 
+    cd.id_cardindev as id, 
+    cd.id_card, 
+    cd.id_pep, 
+    cd.operation, 
+    cd.attempts, 
+    cd.time_stamp,
+	 CASE
+  WHEN cd.operation = 5 THEN (SELECT o.name   FROM organization o WHERE o.guid = cd.id_card)
+  WHEN cd.operation = 3 THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)
+  WHEN cd.operation = 7 THEN (
+        SELECT first 1 p.name||\' \'||p.surname||\' \'||p.patronymic||\' (\'||c.id_card||\') "\'||an.name||\'"\'  FROM people p
+        left join card c on c.id_pep=p.id_pep
+        left join accessname an on an.id_accessname=cd.id_card
+        WHERE p.id_pep = cd.id_pep)
+  END as org_name
+	
+FROM cardindev cd 
+WHERE 
+    (cd.id_dev IN (
+        SELECT d.id_dev 
+        FROM device d 
+        JOIN device d2 ON d2.id_ctrl = d.id_ctrl AND d2.id_reader IS NULL 
+        JOIN servertypelist stl ON d2.id_server = stl.id_server 
+        JOIN servertype st ON st.id = stl.id_type AND st.sname = \'parsec\'
+        WHERE d.id_reader IS NOT NULL
+    ))
+    OR (cd.id_dev IS NULL)
+ORDER BY cd.id_cardindev';
 
-			ORDER BY cd.id_cardindev';
 
-		$sql='SELECT cd.id_cardindev as id,
-				--выборка второго поля:
-				--1 или 2 - это номер карты,
-				--3 - ничего (добавление контакта)
-				--4 (удаление контакта)
-				-- добавить организаци
-				-- 6 удалить организацию
-				-- 7 - это номер категории доступа
-				-- 8 удалить организацию
-						case 
-				  when cd.operation = 1  THEN cd.id_card
-				  when cd.operation = 2  THEN cd.id_card
-				  when cd.operation = 7  THEN (SELECT an.name from accessname an where an.id_accessname=cd.id_card)
-				  when cd.operation = 8  THEN (SELECT an.name from accessname an where an.id_accessname=cd.id_card)
+$sql='SELECT 
+    cd.id_cardindev as id, 
+    cd.id_card, 
+    cd.id_pep, 
+    cd.operation, 
+    cd.attempts, 
+    cd.time_stamp,
+	 CASE
+	  WHEN cd.operation = 1 THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)
+  WHEN cd.operation = 5 THEN (SELECT o.name   FROM organization o WHERE o.guid = cd.id_card)
+  WHEN cd.operation = 3 THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)
+  WHEN cd.operation = 7 THEN (
+        SELECT first 1 p.name||\' \'||p.surname||\' \'||p.patronymic||\' (\'||c.id_card||\') "\'||an.name||\'"\'  FROM people p
+        left join card c on c.id_pep=p.id_pep
+        left join accessname an on an.id_accessname=cd.id_card
+        WHERE p.id_pep = cd.id_pep)
+  END as org_name,
+   case
+  when cd.operation = 1 then (
+    select s.name from device d
+    join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
+    join server s on s.id_server=d2.id_server
+    where d.id_dev=cd.id_dev
+    )
+  when cd.operation = 2 then (select s.name from device d
+    join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
+    join server s on s.id_server=d2.id_server
+    where d.id_dev=cd.id_dev)
+  when cd.operation = 3 then (select s.name from server s
+    join servertypelist stl on stl.id_server =s.id_server
+    join servertype sst on sst.id=stl.id_type
+    where sst.sname=\'parsec\' )
+  when cd.operation = 4 then (4)
+  when cd.operation = 5 then (select s.name from server s
+    join servertypelist stl on stl.id_server =s.id_server
+    join servertype sst on sst.id=stl.id_type
+    where sst.sname=\'parsec\')
+  when cd.operation = 6 then (6)
+  when cd.operation = 7 then (select first 1 s.name from access  a
+    join device d on d.id_dev=a.id_dev
+     join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
+     join server s on s.id_server=d2.id_server
+        where a.id_accessname=cd.id_card)
+  
+  when cd.operation = 8 then (select first 1 s.name from access  a
+    join device d on d.id_dev=a.id_dev
+     join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
+     join server s on s.id_server=d2.id_server
+        where a.id_accessname=cd.id_card)
+  
+  
+  end as dest
+  
+	
+FROM cardindev cd 
 
-						end as id_card,
-					--cd.id_card, 
+ORDER BY cd.id_cardindev';
 
-				   -- колонка id_pep
-							 case
-				  when cd.operation = 1  THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\'
-				  when cd.operation = 2  THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\'
-				  when cd.operation = 3  THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\'
-				  when cd.operation = 7  THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\'
-				  when cd.operation = 8  THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\'
 
-						end as id_pep,
 
-					--cd.id_pep, 
-					cd.operation, 
-					cd.attempts, 
-					cd.time_stamp,
-				-- организация кому добавляем или удаляем
-					 CASE
-				  WHEN cd.operation = 1 THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
-				  WHEN cd.operation = 2 THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
-				  WHEN cd.operation = 3 THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
-				  
-				  WHEN cd.operation = 5 THEN (SELECT o.name   FROM organization o WHERE o.guid = cd.id_card)
-				  WHEN cd.operation = 3 THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)
-				  WHEN cd.operation = 7 THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
-				  WHEN cd.operation = 8 THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
-				  END as org_name,
-				   case
-				  when cd.operation = 1 then (
 
-					select s.name from server s
-					join servertypelist stl on stl.id_server =s.id_server
-					join servertype sst on sst.id=stl.id_type
-					where sst.sname=\'parsec\'
-					)
-				  when cd.operation = 2 then (
-					select s.name from server s
-					join servertypelist stl on stl.id_server =s.id_server
-					join servertype sst on sst.id=stl.id_type
-					where sst.sname=\'parsec\'
-					)
-				  when cd.operation = 3 then (
-					select s.name from server s
-					join servertypelist stl on stl.id_server =s.id_server
-					join servertype sst on sst.id=stl.id_type
-					where sst.sname=\'parsec\'
-					)
-				  when cd.operation = 4 then (4)
-				  when cd.operation = 5 then (
-					select s.name from server s
-					join servertypelist stl on stl.id_server =s.id_server
-					join servertype sst on sst.id=stl.id_type
-					where sst.sname=\'parsec\'
-					)
-				  when cd.operation = 6 then (6)
-				  when cd.operation = 7 then (
-					select first 1 s.name from access  a
-					join device d on d.id_dev=a.id_dev
-					 join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
-					 join server s on s.id_server=d2.id_server
-					 where a.id_accessname=cd.id_card
-					 )
-				  
-				  when cd.operation = 8 then (
-					select first 1 s.name from access  a
-					join device d on d.id_dev=a.id_dev
-					 join device d2 on d2.id_ctrl=d.id_ctrl and d2.id_reader is null
-					 join server s on s.id_server=d2.id_server
-					 where a.id_accessname=cd.id_card
-					 )
-				  
-				  
-				  end as dest
-				  
-					
-				FROM cardindev cd 
-
-				ORDER BY cd.id_cardindev';
 						$query = DB::query(Database::SELECT, $sql)
 						->execute(Database::instance('fb'))
 						->as_array();

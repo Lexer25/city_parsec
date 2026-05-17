@@ -11,11 +11,12 @@ class Controller_Parsec extends Controller_Template {
 			$session = Session::instance();
 			//echo Debug::vars('9', $_POST, $_GET);
 			I18n::load('parsec');
-			$this->template->full_width = true;
+			//$this->template->full_width = true;
+			$this->template->title = 'parsec';
 			
 	}
 
-	public function action_index_()
+	public function action_index()
 	{
 		$_SESSION['menu_active']='parsec';
 		//echo Debug::vars('20', $_SESSION);
@@ -92,7 +93,7 @@ class Controller_Parsec extends Controller_Template {
 				$this->redirect('parsec');
 			break;
 			
-			case 'delAllTasks'://удалить все задачи
+			case 'delAllTasks'://удалдить все задачи
 			
 				//$del_parsec = $this->request->post('id_parsec');
 				Model::factory('parsec')->dellAllTasks();
@@ -126,55 +127,5 @@ class Controller_Parsec extends Controller_Template {
         $this->template->content = $content;
 		
 	}
-	//==================== 31.03.2026
-	public function action_index()
-	{
-		$_SESSION['menu_active'] = 'parsec';
-		
-		$task_list = Model::Factory('parsec')->get_task_list();
-		
-		// Получение состояния из файла state.txt
-		$service_state = $this->get_service_state();
-		
-		$content = View::factory('parsec/parsec', array(
-			'task_list'     => $task_list,
-			'service_state' => $service_state, // Добавляем состояние в view
-		));
-		$this->template->content = $content;
-	}
 
-	/**
-	 * Получить текущее состояние сервиса из файла state.txt
-	 * @return array Массив с ключами: content (содержимое), error (ошибка), file_path, file_exists, file_mtime
-	 */
-	private function get_service_state()
-	{
-		$state_file_path = 'D:\\Buro\\state.txt';
-		$result = array(
-			'content'    => '',
-			'error'      => '',
-			'file_path'  => $state_file_path,
-			'file_exists'=> false,
-			'file_mtime' => null
-		);
-		
-		if (file_exists($state_file_path)) {
-			$result['file_exists'] = true;
-			$result['file_mtime'] = filemtime($state_file_path);
-			
-			$content = @file_get_contents($state_file_path);
-			if ($content === false) {
-				$result['error'] = __('Не удалось прочитать файл state.txt');
-			} else {
-				// Обрезаем лишние пробелы и переносы строк
-				$result['content'] = trim($content);
-			}
-		} else {
-			$result['error'] = __('Файл state.txt не найден по пути: :path', array(':path' => $state_file_path));
-		}
-		
-		return $result;
-	}
-	
-	
 } 
