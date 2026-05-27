@@ -14,21 +14,6 @@ class Controller_Parsec extends Controller_Template {
 			$this->template->full_width = true;
 	}
 
-	public function action_index_()
-	{
-		$_SESSION['menu_active']='parsec';
-		//echo Debug::vars('20', $_SESSION);
-		
-
-		$task_list=Model::Factory('parsec')->get_task_list();
-		$content = View::factory('parsec/parsec', array(
-			'task_list'=>$task_list,
-			
-		
-		));
-        $this->template->content = $content;
-		
-	}
 	
 	/** 23.11.2025 обнуляется attempt для указанного id_cardindev
 	*/
@@ -132,12 +117,15 @@ class Controller_Parsec extends Controller_Template {
 		
 		$task_list = Model::Factory('parsec')->get_task_list();
 		
+		
+		
 		// Получение состояния из файла state.txt
 		$service_state = $this->get_service_state();
 		
 		$content = View::factory('parsec/parsec', array(
 			'task_list'     => $task_list,
 			'service_state' => $service_state, // Добавляем состояние в view
+			
 		));
 		$this->template->content = $content;
 	}
