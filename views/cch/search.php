@@ -49,7 +49,7 @@
  
  
  
- 
+ echo View::factory('parsec/_nav');
  
  ?>
  

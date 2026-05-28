@@ -1,3 +1,4 @@
+<?php echo View::factory('parsec/_nav'); ?>
 <!-- ФОРМА ДЛЯ ОТОБРАЖЕНИЯ СОДЕРЖИМОГО STATE.TXT -->
 <div class="panel panel-info" style="margin-bottom: 20px;">
     <div class="panel-heading">
@@ -30,15 +31,7 @@
     </div>
 </div>
 
-<!-- TABS (Закладки) -->
-<ul class="nav nav-tabs" role="tablist">
-    <li role="presentation" class="active"><a href="#control" aria-controls="control" role="tab" data-toggle="tab">Контроль</a></li>
-    <li role="presentation"><a href="#configurator" aria-controls="configurator" role="tab" data-toggle="tab">Конфигуратор</a></li>
-    <li role="presentation"><a href="#debug" aria-controls="debug" role="tab" data-toggle="tab">Отладка</a></li>
-</ul>
 
-<div class="tab-content" style="margin-top: 20px;">
-    <!-- Вкладка 1: Контроль (исходное содержимое) -->
     <div role="tabpanel" class="tab-pane active" id="control">
         <fieldset>
             <legend><?php echo __('parsec_about'); ?></legend>
@@ -222,36 +215,9 @@
         </div>
     </div>
 
-    <!-- Вкладка 2: Конфигуратор -->
-    <div role="tabpanel" class="tab-pane" id="configurator">
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <h3 class="panel-title">Настройки интеграции Parsec</h3>
-            </div>
-            <div class="panel-body">
-                <p>Здесь будут размещены настройки конфигуратора (параметры подключения, тайминги, сопоставления и т.д.).</p>
-				
-            </div>
-        </div>
-    </div>
 
-    <!-- Вкладка 3: Отладка -->
-    <div role="tabpanel" class="tab-pane" id="debug">
-        <div class="panel panel-warning">
-            <div class="panel-heading">
-                <h3 class="panel-title">Информация для отладки</h3>
-            </div>
-            <div class="panel-body">
-                <p>Здесь будет выводиться отладочная информация (логи, дампы переменных, статусы и т.п.).</p>
-                <?php if (isset($debug_info)): ?>
-                    <pre><?php print_r($debug_info); ?></pre>
-                <?php else: ?>
-                    <div class="alert alert-info">Отладочная информация пока отсутствует.</div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-</div>
+
+
 
 <?php echo Form::close(); ?>
 
