@@ -217,23 +217,7 @@
                     <div class="alert alert-info"><?php echo __('Список задач пуст.'); ?></div>
                 <?php endif; ?>
 
-                <div class="form-group" style="margin-top: 15px;">
-                    <?php
-                   /*  echo Form::button('todo', 'RESTART ALL TASK', array(
-                        'value' => 'set_attempt',
-                        'class' => 'btn btn-warning',
-                        'type' => 'submit',
-                        'onclick' => 'return confirm(\'' . __('restart_all_task_parsec') . '\') ? true : false;'
-                    ));
-                    echo Form::button('todo', 'DELETE ALL TASKS', array(
-                        'value' => 'delAllTasks',
-                        'class' => 'btn btn-danger',
-                        'type' => 'submit',
-                        'style' => 'margin-left: 10px;',
-                        'onclick' => 'return confirm(\'' . __('delete_all_task_parsec') . '\') ? true : false;'
-                    )); */
-                    ?>
-                </div>
+
             </div>
         </div>
     </div>

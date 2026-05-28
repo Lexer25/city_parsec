@@ -2,7 +2,7 @@
 
 class Controller_Cch extends Controller_Template {
 	
-	
+	private $_ConnectionState = false;//состояние связи с SOAP сервером false-связи нет,  true-связь есть 
 	
 	public function before()
 	{
@@ -14,9 +14,12 @@ class Controller_Cch extends Controller_Template {
 		if ($status->error) {
 			// Сервер недоступен
 			echo $status->message; // "Не удалось подключиться к серверу Parsec за 5 секунд"
-			$this->redirect('parsec');
+			echo Debug::vars('17 no connection');//exit;
+			
 			
 		} else {
+			echo Debug::vars('21');//exit;
+			$this->_ConnectionState = true;
 			echo $status->message; // "Соединение установлено, время ответа: 120 мс"
 		}
 		
@@ -166,15 +169,28 @@ class Controller_Cch extends Controller_Template {
 		$version=$pars->getParsecSoapVersion();// версия SOAP-сервера
 		// echo Debug::vars('133', $version); //exit;
 		$OpenSession=$pars->OpenSession();// открыта сессия
-		// echo Debug::vars('133', $OpenSession); exit;
-		$GetDomains=$pars->GetDomains();// домен текущего авторизованного пользователия
-		$GetRootOrgUnit=$pars->GetRootOrgUnit($OpenSession->OpenSessionResult->Value->SessionID);// организация текущего пользователя
-		//$GetOrgUnitsHierarhy=$pars->GetOrgUnitsHierarhy($OpenSession->OpenSessionResult->Value->SessionID);//  список всех организаций 
+	
+	echo Debug::vars('133', $this->_ConnectionState); //exit;
+		 echo Debug::vars('133--', $OpenSession->error); //exit;
+		 
+		$version=null;
+		$OpenSession=null;
+		$GetDomains=null;
+		$GetRootOrgUnit=null;
 		$GetOrgUnitsHierarhy=null;
+		$GetAccessGroups=null;
+		$getAccessArtonit=null;
 		
-		$GetAccessGroups=$pars->GetAccessGroups($OpenSession->OpenSessionResult->Value->SessionID);//  список всех категорий доступа 
-		$getAccessArtonit=$this->_getAccessArtonit();
-		//echo Debug::vars('29', $getAccessArtonit); exit;
+			if($this->_ConnectionState){
+				$GetDomains=$pars->GetDomains();// домен текущего авторизованного пользователия
+				$GetRootOrgUnit=$pars->GetRootOrgUnit($OpenSession->OpenSessionResult->Value->SessionID);// организация текущего пользователя
+				//$GetOrgUnitsHierarhy=$pars->GetOrgUnitsHierarhy($OpenSession->OpenSessionResult->Value->SessionID);//  список всех организаций 
+				$GetOrgUnitsHierarhy=null;
+				
+				$GetAccessGroups=$pars->GetAccessGroups($OpenSession->OpenSessionResult->Value->SessionID);//  список всех категорий доступа 
+				$getAccessArtonit=$this->_getAccessArtonit();
+				//echo Debug::vars('29', $getAccessArtonit); exit;
+			}
 		$content = View::factory('cch/dashboard', array(
 			'version'=>$version,
 			'OpenSession'=>$OpenSession,
