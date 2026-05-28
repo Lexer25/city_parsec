@@ -310,22 +310,27 @@ class Controller_Cch extends Controller_Template {
         
         $addOrg = isset($_POST['addOrg']) ? true : false; // лучше заменить на $this->request->post('addOrg')
         $original_time_limit = ini_get('max_execution_time');
-        set_time_limit(300);
-        
+        set_time_limit(600);
+       
         $orgList = $this->_getOrgList();
+		// echo Debug::vars('316',$orgList ); exit;
         $resultList = array();
-        foreach ($orgList as $value) {
+		$timestart=microtime(true);
+		$resultList['orgcount']=count($orgList);
+        foreach (array_slice($orgList, 0, 10) as $value) {
             $guid = Arr::get($value, 'GUID');
             $orgUnit = $this->_cch_model->GetOrgUnit($this->_session_id, $guid);
-            if (empty((array)$orgUnit)) {
-                $resultList[] = $guid;
+            $orgUnitArray = (array) $orgUnit;
+			if (empty($orgUnitArray)) {
+                $resultList['org_not_in_parsec'][] = $guid;
                 if ($addOrg) {
                     $this->_addOrgListTask($guid);
                 }
             }
         }
+		$resultList['timeexcute']=(microtime(true)-$timestart);
         set_time_limit($original_time_limit);
-        
+      //echo Debug::vars('330',$resultList ); exit;  
         $content = View::factory('cch/search')->set('result', $resultList);
         $this->template->content = $content;
     }
@@ -345,7 +350,8 @@ class Controller_Cch extends Controller_Template {
         foreach ($orgList as $value) {
             $guid = Arr::get($value, 'GUID');
             $orgUnit = $this->_cch_model->GetOrgUnit($this->_session_id, $guid);
-            if (!empty((array)$orgUnit)) {
+            $orgUnitArray = (array) $orgUnit;
+			if (empty($orgUnitArray)) {
                 $resultList[] = $guid;
                 $this->_delOrgListTask($guid);
             }
