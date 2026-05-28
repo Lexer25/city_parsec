@@ -2,10 +2,12 @@
 
 class Controller_Cch extends Controller_Template {
     
-    private $_ConnectionState = false; // состояние связи с SOAP сервером
-    protected $_cch_model = null;      // модель CCH
-    protected $_session_id = null;     // ID сессии Parsec
-    protected $_session_error = null;   // ошибка открытия сессии
+    private $_ConnectionState = false;     // состояние связи с SOAP сервером
+    protected $_cch_model = null;          // модель CCH
+    protected $_session_id = null;         // ID сессии Parsec
+    protected $_session_error = null;      // ошибка открытия сессии
+    protected $_connection_error = null;   // ошибка подключения к SOAP
+    protected $_auth_error = null;         // ошибка авторизации
     
     public function before()
     {
@@ -16,21 +18,16 @@ class Controller_Cch extends Controller_Template {
 
         if ($status->error) {
             // Сервер недоступен
-            echo $status->message;
-           
             $this->_ConnectionState = false;
-            return; // не пытаемся открыть сессию
+            $this->_connection_error = $status->message;
         } else {
-
             $this->_ConnectionState = true;
-            echo $status->message;
             
             // Открываем сессию
             $openSessionResult = $this->_cch_model->OpenSession();
             if (isset($openSessionResult->error) && $openSessionResult->error) {
                 $this->_session_error = $openSessionResult->message;
-                echo 'Ошибка открытия сессии: ' . $openSessionResult->message;
-                // Можно также залогировать
+                $this->_auth_error = 'Ошибка авторизации в Parsec: ' . $openSessionResult->message;
             } else {
                 $this->_session_id = $openSessionResult->OpenSessionResult->Value->SessionID;
             }
@@ -41,7 +38,6 @@ class Controller_Cch extends Controller_Template {
     
     public function action_err()
     {
-        
         $content = View::factory('error_page');
         $this->template->content = $content;
     }
@@ -55,6 +51,7 @@ class Controller_Cch extends Controller_Template {
         
         $GetPerson = $this->_cch_model->GetAccessGroups($this->_session_id);
         $content = View::factory('cch/search')->set('result', $GetPerson);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -68,6 +65,7 @@ class Controller_Cch extends Controller_Template {
         $guid_pep = $this->request->post('guid_pep');
         $GetPerson = $this->_cch_model->GetPersonIdentifiers($this->_session_id, $guid_pep);
         $content = View::factory('cch/search')->set('result', $GetPerson);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -83,6 +81,7 @@ class Controller_Cch extends Controller_Template {
         
         $GetPerson = $this->_cch_model->AddPersonIdentifier($this->_session_id, $card, $guid_pep);
         $content = View::factory('cch/search')->set('result', $GetPerson);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -96,6 +95,7 @@ class Controller_Cch extends Controller_Template {
         $card = $this->request->post('card');
         $GetPerson = $this->_cch_model->DeleteIdentifier($this->_session_id, $card);
         $content = View::factory('cch/search')->set('result', $GetPerson);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -109,6 +109,7 @@ class Controller_Cch extends Controller_Template {
         $guid_pep = $this->request->post('guid_pep');
         $GetPerson = $this->_cch_model->DeletePerson($this->_session_id, $guid_pep);
         $content = View::factory('cch/search')->set('result', $GetPerson);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -122,68 +123,59 @@ class Controller_Cch extends Controller_Template {
         }
     }
     
-   public function _mainView()
-{
-    $pars = $this->_cch_model;
-    
-    // Инициализируем переменные для представления
-    $version = null;
-    $openSessionError = null;
-    $GetDomains = null;
-    $GetRootOrgUnit = null;
-    $GetAccessGroups = null;
-    $getAccessArtonit = null;
-    
-    // Если соединение есть и сессия открыта – получаем данные через SOAP
-    if ($this->_ConnectionState && $this->_session_id) {
-        // Версия SOAP-сервера (не требует сессии)
-        $version = $pars->getParsecSoapVersion();
-        if (isset($version->error) && $version->error) {
-            $version = 'Ошибка: ' . $version->message;
+    public function _mainView()
+    {
+        $pars = $this->_cch_model;
+        
+        // Инициализируем переменные для представления
+        $version = null;
+        $GetDomains = null;
+        $GetRootOrgUnit = null;
+        $GetAccessGroups = null;
+        $getAccessArtonit = null;
+        
+        // Если соединение есть и сессия открыта – получаем данные через SOAP
+        if ($this->_ConnectionState && $this->_session_id) {
+            // Версия SOAP-сервера (не требует сессии)
+            $version = $pars->getParsecSoapVersion();
+            if (isset($version->error) && $version->error) {
+                $version = 'Ошибка: ' . $version->message;
+            }
+            
+            $GetDomains = $pars->GetDomains();
+            if (isset($GetDomains->error) && $GetDomains->error) {
+                $GetDomains = 'Ошибка: ' . $GetDomains->message;
+            }
+            
+            $GetRootOrgUnit = $pars->GetRootOrgUnit($this->_session_id);
+            if (isset($GetRootOrgUnit->error) && $GetRootOrgUnit->error) {
+                $GetRootOrgUnit = 'Ошибка: ' . $GetRootOrgUnit->message;
+            }
+            
+            $GetAccessGroups = $pars->GetAccessGroups($this->_session_id);
+            if (isset($GetAccessGroups->error) && $GetAccessGroups->error) {
+                $GetAccessGroups = 'Ошибка: ' . $GetAccessGroups->message;
+            } else {
+                // Получаем локальные категории доступа из БД Артонит (если есть)
+                $getAccessArtonit = $this->_getAccessArtonit();
+            }
         }
         
-        $GetDomains = $pars->GetDomains();
-        if (isset($GetDomains->error) && $GetDomains->error) {
-            $GetDomains = 'Ошибка: ' . $GetDomains->message;
-        }
+        $content = View::factory('cch/dashboard', array(
+            'version' => $version,
+            'OpenSession' => $this->_session_id ? 'Сессия активна (ID: ' . $this->_session_id . ')' : ($this->_session_error ?: 'Сессия не открыта'),
+            'GetDomains' => $GetDomains,
+            'GetRootOrgUnit' => $GetRootOrgUnit,
+            'GetOrgUnitsHierarhy' => null,
+            'GetAccessGroups' => $GetAccessGroups,
+            'getAccessArtonit' => $getAccessArtonit,
+        ));
         
-        $GetRootOrgUnit = $pars->GetRootOrgUnit($this->_session_id);
-        if (isset($GetRootOrgUnit->error) && $GetRootOrgUnit->error) {
-            $GetRootOrgUnit = 'Ошибка: ' . $GetRootOrgUnit->message;
-        }
+        // Добавляем alert с ошибкой, если есть
+        $content = $this->_addErrorAlert($content);
         
-        $GetAccessGroups = $pars->GetAccessGroups($this->_session_id);
-        if (isset($GetAccessGroups->error) && $GetAccessGroups->error) {
-            $GetAccessGroups = 'Ошибка: ' . $GetAccessGroups->message;
-        } else {
-            // Получаем локальные категории доступа из БД Артонит (если есть)
-            $getAccessArtonit = $this->_getAccessArtonit();
-        }
-    } else {
-        // Нет соединения или сессии – готовим сообщения об ошибке
-        if (!$this->_ConnectionState) {
-            $errorMsg = 'Нет соединения с SOAP-сервером Parsec.';
-        } else {
-            $errorMsg = $this->_session_error ?: 'Не удалось открыть сессию Parsec.';
-        }
-        $version = $errorMsg;
-        $GetDomains = $errorMsg;
-        $GetRootOrgUnit = $errorMsg;
-        $GetAccessGroups = $errorMsg;
-        // $getAccessArtonit остаётся null
+        $this->template->content = $content;
     }
-    
-    $content = View::factory('cch/dashboard', array(
-        'version' => $version,
-        'OpenSession' => $this->_session_id ? 'Сессия активна (ID: ' . $this->_session_id . ')' : ($this->_session_error ?: 'Сессия не открыта'),
-        'GetDomains' => $GetDomains,
-        'GetRootOrgUnit' => $GetRootOrgUnit,
-        'GetOrgUnitsHierarhy' => null,
-        'GetAccessGroups' => $GetAccessGroups,
-        'getAccessArtonit' => $getAccessArtonit,
-    ));
-    $this->template->content = $content;
-}
     
     public function action_search()
     {
@@ -203,12 +195,15 @@ class Controller_Cch extends Controller_Template {
         $content = View::factory('cch/search')
             ->set('result', $GetPerson)
             ->set('guid_pep', $guid_pep);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
     protected function _show_search_form()
     {
-        $this->template->content = View::factory('cch/search');
+        $content = View::factory('cch/search');
+        $content = $this->_addErrorAlert($content);
+        $this->template->content = $content;
     }
     
     protected function _search_from_post()
@@ -220,6 +215,7 @@ class Controller_Cch extends Controller_Template {
         $content = View::factory('cch/search')
             ->set('result', $GetPerson)
             ->set('guid_pep', $guid_pep);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -241,6 +237,7 @@ class Controller_Cch extends Controller_Template {
         $content = View::factory('cch/search')
             ->set('result', $GetIdentifierExtraData)
             ->set('card', $card);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -253,6 +250,7 @@ class Controller_Cch extends Controller_Template {
         $content = View::factory('cch/search')
             ->set('result', $GetObjectName)
             ->set('guid', $guid);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -265,6 +263,7 @@ class Controller_Cch extends Controller_Template {
         $content = View::factory('cch/search')
             ->set('result', $GetInheritedAccessGroups)
             ->set('guid_access', $guid_access);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -277,6 +276,7 @@ class Controller_Cch extends Controller_Template {
         $content = View::factory('cch/search')
             ->set('result', $FindPersonByIdentifier)
             ->set('card', $card);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -298,6 +298,7 @@ class Controller_Cch extends Controller_Template {
         $content = View::factory('cch/search')
             ->set('result', $GetOrgUnit)
             ->set('guid_org', $guid_org);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -308,30 +309,32 @@ class Controller_Cch extends Controller_Template {
     {
         if (!$this->_checkSession()) return;
         
-        $addOrg = isset($_POST['addOrg']) ? true : false; // лучше заменить на $this->request->post('addOrg')
+        $addOrg = isset($_POST['addOrg']) ? true : false;
         $original_time_limit = ini_get('max_execution_time');
         set_time_limit(600);
        
         $orgList = $this->_getOrgList();
-		// echo Debug::vars('316',$orgList ); exit;
         $resultList = array();
-		$timestart=microtime(true);
-		$resultList['orgcount']=count($orgList);
+        $timestart = microtime(true);
+        $resultList['orgcount'] = count($orgList);
+        
         foreach (array_slice($orgList, 0, 10) as $value) {
             $guid = Arr::get($value, 'GUID');
             $orgUnit = $this->_cch_model->GetOrgUnit($this->_session_id, $guid);
             $orgUnitArray = (array) $orgUnit;
-			if (empty($orgUnitArray)) {
+            if (empty($orgUnitArray)) {
                 $resultList['org_not_in_parsec'][] = $guid;
                 if ($addOrg) {
                     $this->_addOrgListTask($guid);
                 }
             }
         }
-		$resultList['timeexcute']=(microtime(true)-$timestart);
+        
+        $resultList['timeexcute'] = (microtime(true) - $timestart);
         set_time_limit($original_time_limit);
-      //echo Debug::vars('330',$resultList ); exit;  
+        
         $content = View::factory('cch/search')->set('result', $resultList);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
@@ -351,7 +354,7 @@ class Controller_Cch extends Controller_Template {
             $guid = Arr::get($value, 'GUID');
             $orgUnit = $this->_cch_model->GetOrgUnit($this->_session_id, $guid);
             $orgUnitArray = (array) $orgUnit;
-			if (empty($orgUnitArray)) {
+            if (empty($orgUnitArray)) {
                 $resultList[] = $guid;
                 $this->_delOrgListTask($guid);
             }
@@ -359,10 +362,11 @@ class Controller_Cch extends Controller_Template {
         set_time_limit($original_time_limit);
         
         $content = View::factory('cch/search')->set('result', $resultList);
+        $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
     
-    // --- вспомогательные методы (без изменений, кроме возможных правок SQL-инъекций) ---
+    // --- вспомогательные методы ---
     
     protected function _getOrgList()
     {
@@ -382,8 +386,6 @@ class Controller_Cch extends Controller_Template {
     
     protected function _delOrgListTask($guid)
     {
-        // Внимание: здесь используется __() с подстановкой – это небезопасно.
-        // Лучше переписать через параметры.
         $sql = 'delete from cardindev cd
                 where cd.operation=5
                 and cd.id_card = :guid';
@@ -463,22 +465,61 @@ class Controller_Cch extends Controller_Template {
      */
     protected function _checkSession()
     {
-        if (!$this->_ConnectionState) {
-            $this->template->content = 'Нет соединения с SOAP-сервером Parsec.';
+        if ($this->_connection_error) {
+            $this->template->content = $this->_addErrorAlert('Нет соединения с SOAP-сервером Parsec.');
+            return false;
+        }
+        if ($this->_auth_error) {
+            $this->template->content = $this->_addErrorAlert($this->_auth_error);
             return false;
         }
         if (empty($this->_session_id)) {
             $error = $this->_session_error ?: 'Не удалось открыть сессию Parsec.';
-            $this->template->content = $error;
+            $this->template->content = $this->_addErrorAlert($error);
             return false;
         }
         return true;
     }
     
+    /**
+     * Выводит JavaScript alert с сообщением об ошибке
+     * @param string|View $view представление, в которое добавляется скрипт
+     * @return string модифицированный HTML
+     */
+    protected function _addErrorAlert($view)
+    {
+        $errorMsg = null;
+        
+        if ($this->_connection_error) {
+            $errorMsg = $this->_connection_error;
+        } elseif ($this->_auth_error) {
+            $errorMsg = $this->_auth_error;
+        } elseif ($this->_session_error && !$this->_session_id) {
+            $errorMsg = 'Ошибка: ' . $this->_session_error;
+        }
+        
+        if ($errorMsg) {
+            $alert = '<script type="text/javascript">
+                $(document).ready(function() {
+                    alert("' . addslashes($errorMsg) . '");
+                });
+            </script>';
+            
+            // Если $view - объект View, рендерим его
+            if ($view instanceof View) {
+                $view = (string) $view;
+            }
+            return $view . $alert;
+        }
+        
+        return $view;
+    }
+    
     protected function _show_search_card_form()
     {
-        // Этот метод не определён в оригинале – добавим заглушку
-        $this->template->content = View::factory('cch/search');
+        $content = View::factory('cch/search');
+        $content = $this->_addErrorAlert($content);
+        $this->template->content = $content;
     }
     
 } // End cch
