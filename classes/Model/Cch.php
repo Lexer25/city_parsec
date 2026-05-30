@@ -44,9 +44,7 @@ class Model_Cch extends Model {
      */
     public function checkConnection()
     {
-        $wsdl = (Kohana::$environment === Kohana::DEVELOPMENT) 
-            ? $this->_soap_config['wsdl_dev'] 
-            : $this->_soap_config['wsdl'];
+        $wsdl = $this->_soap_config['wsdl'];
         
         $ch = curl_init();
         curl_setopt_array($ch, array(
@@ -183,9 +181,7 @@ class Model_Cch extends Model {
      */
     public function getConnectionStatus()
     {
-        $wsdl = (Kohana::$environment === Kohana::DEVELOPMENT) 
-            ? $this->_soap_config['wsdl_dev'] 
-            : $this->_soap_config['wsdl'];
+        $wsdl = $this->_soap_config['wsdl'];
         
         $start_time = microtime(true);
         $is_available = $this->checkConnection();

@@ -123,59 +123,63 @@ class Controller_Cch extends Controller_Template {
         }
     }
     
-    public function _mainView()
-    {
-        $pars = $this->_cch_model;
-        
-        // Инициализируем переменные для представления
-        $version = null;
-        $GetDomains = null;
-        $GetRootOrgUnit = null;
-        $GetAccessGroups = null;
-        $getAccessArtonit = null;
-        
-        // Если соединение есть и сессия открыта – получаем данные через SOAP
-        if ($this->_ConnectionState && $this->_session_id) {
-            // Версия SOAP-сервера (не требует сессии)
-            $version = $pars->getParsecSoapVersion();
-            if (isset($version->error) && $version->error) {
-                $version = 'Ошибка: ' . $version->message;
-            }
-            
-            $GetDomains = $pars->GetDomains();
-            if (isset($GetDomains->error) && $GetDomains->error) {
-                $GetDomains = 'Ошибка: ' . $GetDomains->message;
-            }
-            
-            $GetRootOrgUnit = $pars->GetRootOrgUnit($this->_session_id);
-            if (isset($GetRootOrgUnit->error) && $GetRootOrgUnit->error) {
-                $GetRootOrgUnit = 'Ошибка: ' . $GetRootOrgUnit->message;
-            }
-            
-            $GetAccessGroups = $pars->GetAccessGroups($this->_session_id);
-            if (isset($GetAccessGroups->error) && $GetAccessGroups->error) {
-                $GetAccessGroups = 'Ошибка: ' . $GetAccessGroups->message;
-            } else {
-                // Получаем локальные категории доступа из БД Артонит (если есть)
-                $getAccessArtonit = $this->_getAccessArtonit();
-            }
-        }
-        
-        $content = View::factory('cch/dashboard', array(
-            'version' => $version,
-            'OpenSession' => $this->_session_id ? 'Сессия активна (ID: ' . $this->_session_id . ')' : ($this->_session_error ?: 'Сессия не открыта'),
-            'GetDomains' => $GetDomains,
-            'GetRootOrgUnit' => $GetRootOrgUnit,
-            'GetOrgUnitsHierarhy' => null,
-            'GetAccessGroups' => $GetAccessGroups,
-            'getAccessArtonit' => $getAccessArtonit,
-        ));
-        
-        // Добавляем alert с ошибкой, если есть
-        $content = $this->_addErrorAlert($content);
-        
-        $this->template->content = $content;
-    }
+		public function _mainView()
+		{
+			$pars = $this->_cch_model;
+			
+			// Получаем конфигурацию SOAP
+			$soapConfig = $this->_getSoapConfigContent();
+			
+			// Инициализируем переменные для представления
+			$version = null;
+			$GetDomains = null;
+			$GetRootOrgUnit = null;
+			$GetAccessGroups = null;
+			$getAccessArtonit = null;
+			
+			// Если соединение есть и сессия открыта – получаем данные через SOAP
+			if ($this->_ConnectionState && $this->_session_id) {
+				// Версия SOAP-сервера (не требует сессии)
+				$version = $pars->getParsecSoapVersion();
+				if (isset($version->error) && $version->error) {
+					$version = 'Ошибка: ' . $version->message;
+				}
+				
+				$GetDomains = $pars->GetDomains();
+				if (isset($GetDomains->error) && $GetDomains->error) {
+					$GetDomains = 'Ошибка: ' . $GetDomains->message;
+				}
+				
+				$GetRootOrgUnit = $pars->GetRootOrgUnit($this->_session_id);
+				if (isset($GetRootOrgUnit->error) && $GetRootOrgUnit->error) {
+					$GetRootOrgUnit = 'Ошибка: ' . $GetRootOrgUnit->message;
+				}
+				
+				$GetAccessGroups = $pars->GetAccessGroups($this->_session_id);
+				if (isset($GetAccessGroups->error) && $GetAccessGroups->error) {
+					$GetAccessGroups = 'Ошибка: ' . $GetAccessGroups->message;
+				} else {
+					// Получаем локальные категории доступа из БД Артонит (если есть)
+					$getAccessArtonit = $this->_getAccessArtonit();
+				}
+			}
+			
+			$content = View::factory('cch/dashboard', array(
+				'version' => $version,
+				'soapConfig' => $soapConfig,
+				'OpenSession' => $this->_session_id ? 'Сессия активна (ID: ' . $this->_session_id . ')' : ($this->_session_error ?: 'Сессия не открыта'),
+				'GetDomains' => $GetDomains,
+				'GetRootOrgUnit' => $GetRootOrgUnit,
+				'GetOrgUnitsHierarhy' => null,
+				'GetAccessGroups' => $GetAccessGroups,
+				'getAccessArtonit' => $getAccessArtonit,
+			));
+			
+			// Добавляем alert с ошибкой, если есть
+			$content = $this->_addErrorAlert($content);
+			
+			$this->template->content = $content;
+		}
     
     public function action_search()
     {
@@ -522,4 +526,35 @@ class Controller_Cch extends Controller_Template {
         $this->template->content = $content;
     }
     
+	
+			/**
+		 * Получить содержимое конфигурационного файла soap.php
+		 * @return array|string
+		 */
+		protected function _getSoapConfigContent()
+		{
+			$config_file = DOCROOT . 'modules/parsec/config/soap.php';
+			
+			if (!file_exists($config_file)) {
+				return 'Файл конфигурации не найден: ' . $config_file;
+			}
+			
+			try {
+				// Читаем содержимое файла
+				$content = file_get_contents($config_file);
+				
+				// Для отладки – показываем сырое содержимое
+				// return '<pre>' . htmlspecialchars($content) . '</pre>';
+				
+				// Или загружаем конфигурацию через Kohana
+				$config = (array) Kohana::$config->load('soap.parsec');
+				
+				return $config;
+				
+			} catch (Exception $e) {
+				return 'Ошибка чтения файла: ' . $e->getMessage();
+			}
+		}
+
+
 } // End cch

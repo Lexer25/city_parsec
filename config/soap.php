@@ -3,7 +3,6 @@
 return array(
     'parsec' => array(
         'wsdl' => 'http://192.168.10.5:10101/IntegrationService/IntegrationService.asmx?wsdl',
-        'wsdl_dev' => 'http://192.168.10.5:10101/IntegrationService/IntegrationService.asmx?wsdl',
         'domain' => '',
         'username' => 'parsec',
         'password' => 'parsec',
