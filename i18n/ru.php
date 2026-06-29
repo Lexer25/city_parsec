@@ -30,6 +30,11 @@ return array(
 								<br>delete - Удалить задачу,
 								
 								',
-								
+			'NAME_in_PARSEC'    => 'Название категории доступа в Парсеке',					
+			'IDENTIFTYPE'    => 'Тип идентификаторов',					
+			'NAME_in_ARTONIT'    => 'Название категории доступа в Артонит',					
+			'ToDo'    => 'Команда',					
+			'addAccessName'    => 'Добавить в Артонит',					
+			'connectionStringDescription'    => 'Файл конфигурации C:\xampp\htdocs\city\modules\parsec\config\soap.php содержит настройки, необходимые для подключения к модулю интеграции Парсек.',					
 								
 );
