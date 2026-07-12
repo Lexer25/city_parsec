@@ -11,7 +11,7 @@ class Controller_Parsec extends Controller_Template {
 			$session = Session::instance();
 			//echo Debug::vars('9', $_POST, $_GET);
 			I18n::load('parsec');
-			$this->template->full_width = true;
+			$this->set_full_width(true);
 	}
 
 	
