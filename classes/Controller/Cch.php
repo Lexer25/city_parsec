@@ -123,63 +123,83 @@ class Controller_Cch extends Controller_Template {
         }
     }
     
-		public function _mainView()
-		{
-			$pars = $this->_cch_model;
-			
-			// Получаем конфигурацию SOAP
-			$soapConfig = $this->_getSoapConfigContent();
-			
-			// Инициализируем переменные для представления
-			$version = null;
-			$GetDomains = null;
-			$GetRootOrgUnit = null;
-			$GetAccessGroups = null;
-			$getAccessArtonit = null;
-			
-			// Если соединение есть и сессия открыта – получаем данные через SOAP
-			if ($this->_ConnectionState && $this->_session_id) {
-				// Версия SOAP-сервера (не требует сессии)
-				$version = $pars->getParsecSoapVersion();
-				if (isset($version->error) && $version->error) {
-					$version = 'Ошибка: ' . $version->message;
-				}
-				
-				$GetDomains = $pars->GetDomains();
-				if (isset($GetDomains->error) && $GetDomains->error) {
-					$GetDomains = 'Ошибка: ' . $GetDomains->message;
-				}
-				
-				$GetRootOrgUnit = $pars->GetRootOrgUnit($this->_session_id);
-				if (isset($GetRootOrgUnit->error) && $GetRootOrgUnit->error) {
-					$GetRootOrgUnit = 'Ошибка: ' . $GetRootOrgUnit->message;
-				}
-				
-				$GetAccessGroups = $pars->GetAccessGroups($this->_session_id);
-				if (isset($GetAccessGroups->error) && $GetAccessGroups->error) {
-					$GetAccessGroups = 'Ошибка: ' . $GetAccessGroups->message;
-				} else {
-					// Получаем локальные категории доступа из БД Артонит (если есть)
-					$getAccessArtonit = $this->_getAccessArtonit();
-				}
-			}
-			
-			$content = View::factory('cch/dashboard', array(
-				'version' => $version,
-				'soapConfig' => $soapConfig,
-				'OpenSession' => $this->_session_id ? 'Сессия активна (ID: ' . $this->_session_id . ')' : ($this->_session_error ?: 'Сессия не открыта'),
-				'GetDomains' => $GetDomains,
-				'GetRootOrgUnit' => $GetRootOrgUnit,
-				'GetOrgUnitsHierarhy' => null,
-				'GetAccessGroups' => $GetAccessGroups,
-				'getAccessArtonit' => $getAccessArtonit,
-			));
-			
-			// Добавляем alert с ошибкой, если есть
-			$content = $this->_addErrorAlert($content);
-			
-			$this->template->content = $content;
-		}
+public function _mainView()
+{
+    $pars = $this->_cch_model;
+    
+    // Получаем конфигурацию SOAP
+    $soapConfig = $this->_getSoapConfigContent();
+    
+    // Инициализируем переменные для представления
+    $version = null;
+    $GetDomains = null;
+    $GetRootOrgUnit = null;
+    $GetAccessGroups = null;
+    $getAccessArtonit = null;
+
+    // Если соединение есть и сессия открыта – получаем данные через SOAP
+    if ($this->_ConnectionState) {
+        // Версия SOAP-сервера (не требует сессии)
+        $version = $pars->getParsecSoapVersion();
+        if (isset($version->error) && $version->error) {
+            $version = 'Ошибка: ' . $version->message;
+        }
+        
+        $GetDomains = $pars->GetDomains();
+        if (isset($GetDomains->error) && $GetDomains->error) {
+            $GetDomains = 'Ошибка: ' . $GetDomains->message;
+        }
+        
+        $GetRootOrgUnit = $pars->GetRootOrgUnit($this->_session_id);
+        if (isset($GetRootOrgUnit->error) && $GetRootOrgUnit->error) {
+            $GetRootOrgUnit = 'Ошибка: ' . $GetRootOrgUnit->message;
+        }
+        
+        $GetAccessGroups = $pars->GetAccessGroups($this->_session_id);
+        if (isset($GetAccessGroups->error) && $GetAccessGroups->error) {
+            $GetAccessGroups = 'Ошибка: ' . $GetAccessGroups->message;
+        } else {
+            // Получаем локальные категории доступа из БД Артонит (если есть)
+            $getAccessArtonit = $this->_getAccessArtonit();
+        }
+    }
+    
+    // Формируем текст статуса сессии для отображения
+    $session_status = '';
+    if ($this->_connection_error) {
+        $session_status = 'Ошибка: ' . $this->_connection_error;
+    } elseif ($this->_auth_error) {
+        $session_status = 'Ошибка: ' . $this->_auth_error;
+    } elseif ($this->_session_id) {
+        $session_status = 'Сессия активна (ID: ' . $this->_session_id . ')';
+    } elseif ($this->_session_error) {
+        $session_status = 'Ошибка: ' . $this->_session_error;
+    } else {
+        $session_status = 'Сессия не открыта';
+    }
+    
+    $content = View::factory('cch/dashboard', array(
+        'version' => $version,
+        'soapConfig' => $soapConfig,
+        'OpenSession' => $session_status,
+        'GetDomains' => $GetDomains,
+        'GetRootOrgUnit' => $GetRootOrgUnit,
+        'GetOrgUnitsHierarhy' => null,
+        'GetAccessGroups' => $GetAccessGroups,
+        'getAccessArtonit' => $getAccessArtonit,
+        // Явно передаем статусы для отображения
+        'connection_state' => $this->_ConnectionState,
+        'connection_error' => $this->_connection_error,
+        'auth_error' => $this->_auth_error,
+        'session_id' => $this->_session_id,
+        'session_error' => $this->_session_error,
+    ));
+    
+    // Добавляем alert с ошибкой, если есть
+    $content = $this->_addErrorAlert($content);
+    
+    $this->template->content = $content;
+}
     
     public function action_search()
     {

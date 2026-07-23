@@ -1,7 +1,117 @@
-<?php //echo Debug::vars('1', $version); exit;?>
+<?php
+// Получаем статус подключения из переменных, переданных в представление
+$connection_status = isset($OpenSession) ? $OpenSession : 'Неизвестно';
+
+// Явно определяем состояние подключения по переменным из контроллера
+$is_connected = isset($connection_state) ? $connection_state : false;
+$has_session = isset($session_id) && !empty($session_id);
+$has_error = isset($connection_error) && !empty($connection_error);
+$has_auth_error = isset($auth_error) && !empty($auth_error);
+
+// Определяем общий статус панели
+if ($has_error) {
+    $status_class = 'panel-danger';
+    $status_icon = 'glyphicon-remove-circle';
+    $status_text = 'ОШИБКА ПОДКЛЮЧЕНИЯ';
+} elseif ($has_auth_error) {
+    $status_class = 'panel-danger';
+    $status_icon = 'glyphicon-remove-circle';
+    $status_text = 'ОШИБКА АВТОРИЗАЦИИ';
+} elseif ($has_session) {
+    $status_class = 'panel-success';
+    $status_icon = 'glyphicon-ok-circle';
+    $status_text = 'ПОДКЛЮЧЕНО';
+} else {
+    $status_class = 'panel-warning';
+    $status_icon = 'glyphicon-warning-sign';
+    $status_text = 'СЕССИЯ НЕ ОТКРЫТА';
+}
+
+// Определяем значения для каждой строки
+if ($has_error) {
+    // Нет подключения - сессия и авторизация пустые
+    $connection_status_text = 'НЕТ';
+    $session_status_text = '—';
+    $auth_status_text = '—';
+} elseif ($has_auth_error) {
+    // Есть подключение, но ошибка авторизации
+    $connection_status_text = 'ЕСТЬ';
+    $session_status_text = '—';
+    $auth_status_text = 'НЕТ (ошибка)';
+} elseif ($has_session) {
+    // Все хорошо
+    $connection_status_text = 'ЕСТЬ';
+    $session_status_text = 'ЕСТЬ (ID: ' . $session_id . ')';
+    $auth_status_text = 'УСПЕШНО';
+} else {
+    // Подключение есть, но сессия не открыта
+    $connection_status_text = 'ЕСТЬ';
+    $session_status_text = 'НЕТ';
+    $auth_status_text = '—';
+}
+?>
+
+<!-- БЛОК СОСТОЯНИЯ ПОДКЛЮЧЕНИЯ -->
+<div class="panel <?php echo $status_class; ?>" style="margin-bottom: 20px;">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <span class="glyphicon <?php echo $status_icon; ?>"></span>
+            Состояние подключения к Parsec
+        </h3>
+    </div>
+    <div class="panel-body">
+        <table class="table table-bordered table-condensed" style="margin-bottom: 0; width: auto;">
+            <tr>
+                <td width="200"><strong>Подключение:</strong></td>
+                <td>
+                    <span class="label <?php echo ($connection_status_text == 'ЕСТЬ') ? 'label-success' : 'label-danger'; ?>" style="font-size: 14px; padding: 5px 15px;">
+                        <?php echo $connection_status_text; ?>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Сессия:</strong></td>
+                <td>
+                    <?php if ($session_status_text == '—'): ?>
+                        <span class="text-muted">—</span>
+                    <?php elseif (strpos($session_status_text, 'ЕСТЬ') !== false): ?>
+                        <span class="text-success"><?php echo htmlspecialchars($session_status_text); ?></span>
+                    <?php else: ?>
+                        <span class="text-danger"><?php echo htmlspecialchars($session_status_text); ?></span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Авторизация:</strong></td>
+                <td>
+                    <?php if ($auth_status_text == '—'): ?>
+                        <span class="text-muted">—</span>
+                    <?php elseif ($auth_status_text == 'УСПЕШНО'): ?>
+                        <span class="text-success"><?php echo $auth_status_text; ?></span>
+                    <?php else: ?>
+                        <span class="text-danger"><?php echo $auth_status_text; ?></span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php if ($has_error && $connection_error): ?>
+            <tr>
+                <td><strong>Детали ошибки:</strong></td>
+                <td><span class="text-danger"><?php echo htmlspecialchars($connection_error); ?></span></td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($has_auth_error && $auth_error): ?>
+            <tr>
+                <td><strong>Детали ошибки:</strong></td>
+                <td><span class="text-danger"><?php echo htmlspecialchars($auth_error); ?></span></td>
+            </tr>
+            <?php endif; ?>
+        </table>
+    </div>
+</div>
+
 <div class="panel panel-primary">
     <div class="panel-heading">
-        <h3 class="panel-title"><?php echo __('connectionString')?></h3>
+        <h3 class="panel-title"><?php echo __('connectionString');?></h3>
     </div>
     <div class="panel-body">
         <p><?php echo __('connectionStringDescription');?></p>
@@ -16,7 +126,6 @@
                     <td>wsdl</td>
                     <td><?php echo htmlspecialchars($soapConfig['wsdl']); ?></td>
                 </tr>
-               
                 <tr>
                     <td>domain</td>
                     <td><?php echo htmlspecialchars($soapConfig['domain'] ?: '(пусто)'); ?></td>
@@ -43,17 +152,12 @@
                 Конфигурация не загружена.
             </div>
         <?php endif; ?>
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title"><?php echo __('connectionString')?></h3>
-			</div>
-		</div>
     </div>
 </div>
 
 <div class="panel panel-primary">
     <div class="panel-heading">
-        <h3 class="panel-title"><?php echo __('connectionString')?></h3>
+        <h3 class="panel-title"><?php echo __('connectionString');?></h3>
     </div>
     <div class="panel-body">
         <p><?php echo __('connectionStringDescription');?></p>
@@ -97,7 +201,6 @@
     </div>
 </div>
 
-</div>
 <div class="panel panel-primary">
 <?php echo View::factory('parsec/_nav'); ?>
   <div class="panel-heading">
@@ -116,7 +219,6 @@
         <td>version</td>
         <td><?php echo is_string($version) ? htmlspecialchars($version) : Debug::vars($version); ?></td>
       </tr>
-    
     
       <tr>
         <td><?php echo $i++;?></td>

@@ -92,10 +92,7 @@ class Model_Cch extends Model {
         if ($this->_soap_client !== null) {
             return true;
         }
-        
-        $wsdl = (Kohana::$environment === Kohana::DEVELOPMENT) 
-            ? $this->_soap_config['wsdl_dev'] 
-            : $this->_soap_config['wsdl'];
+
         
         // Быстрая проверка соединения перед инициализацией SOAP
         if (!$this->checkConnection()) {
@@ -192,7 +189,7 @@ class Model_Cch extends Model {
                 'error' => false,
                 'connected' => true,
                 'response_time_ms' => $response_time,
-                'message' => 'Соединение с сервером Parsec установлено (таймаут ' . $this->_connection_timeout . ' сек)',
+                'message' => 'Соединение с сервером Parsec установлено',
                 'wsdl' => $wsdl,
                 'timeout' => $this->_connection_timeout
             );
@@ -201,7 +198,7 @@ class Model_Cch extends Model {
                 'error' => true,
                 'connected' => false,
                 'response_time_ms' => $response_time,
-                'message' => 'Не удалось подключиться к серверу Parsec за ' . $this->_connection_timeout . ' секунд',
+                'message' => 'Не удалось подключиться к серверу Parsec',
                 'wsdl' => $wsdl,
                 'timeout' => $this->_connection_timeout
             );
