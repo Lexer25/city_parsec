@@ -11,13 +11,11 @@ class Model_Cch extends Model {
      * @var array Конфигурация SOAP
      */
     protected $_soap_config = null;
-	
-	/**
+    
+    /**
      * @var string WSDL URL
      */
     protected $_wsdl = null;
-	
-	
     
     /**
      * @var int Таймаут подключения (секунды)
@@ -38,8 +36,9 @@ class Model_Cch extends Model {
     protected function _load_soap_config()
     {
         $this->_soap_config = Kohana::$config->load('soap.parsec');
-		        // Сохраняем WSDL в свойство класса
-        $this->_wsdl = $this->_soap_config['wsdl'];
+        
+        // Сохраняем WSDL в свойство класса
+        $this->_wsdl = isset($this->_soap_config['wsdl']) ? $this->_soap_config['wsdl'] : '';
     
         if (isset($this->_soap_config['connection_timeout'])) {
             $this->_connection_timeout = (int)$this->_soap_config['connection_timeout'];
@@ -53,15 +52,17 @@ class Model_Cch extends Model {
      */
     public function checkConnection()
     {
-       
-		$this->_wsdl;
+        if (empty($this->_wsdl)) {
+            Kohana::$log->add(Log::ERROR, 'WSDL не задан в конфигурации');
+            return false;
+        }
         
         $ch = curl_init();
         curl_setopt_array($ch, array(
             CURLOPT_URL => $this->_wsdl,
-            CURLOPT_NOBODY => true,           // HEAD запрос (не скачиваем тело)
-            CURLOPT_CONNECTTIMEOUT => $this->_connection_timeout,  // Таймаут подключения
-            CURLOPT_TIMEOUT => $this->_connection_timeout,         // Общий таймаут
+            CURLOPT_NOBODY => true,
+            CURLOPT_CONNECTTIMEOUT => $this->_connection_timeout,
+            CURLOPT_TIMEOUT => $this->_connection_timeout,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FAILONERROR => false,
             CURLOPT_SSL_VERIFYPEER => false,
@@ -70,7 +71,6 @@ class Model_Cch extends Model {
             CURLOPT_MAXREDIRS => 3
         ));
         
-        $start_time = microtime(true);
         $result = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curl_error = curl_error($ch);
@@ -81,9 +81,6 @@ class Model_Cch extends Model {
         // Логируем результат проверки
         Kohana::$log->add(Log::DEBUG, "SOAP connection check: HTTP={$http_code}, connect_time={$connect_time}s, total_time={$total_time}s");
         
-        // Считаем соединение успешным при любом HTTP ответе (200, 301, 302, 401, 500 и т.д.)
-        // Главное, что сервер ответил в течение таймаута
-
         if ($curl_error === '' && $http_code > 0) {
             return true;
         }
@@ -103,18 +100,21 @@ class Model_Cch extends Model {
         if ($this->_soap_client !== null) {
             return true;
         }
-
-$this->_wsdl;
-          
+        
+        if (empty($this->_wsdl)) {
+            Kohana::$log->add(Log::ERROR, 'WSDL не задан в конфигурации');
+            return false;
+        }
+        
         // Быстрая проверка соединения перед инициализацией SOAP
         if (!$this->checkConnection()) {
             Kohana::$log->add(Log::ERROR, 'SOAP клиент не инициализирован: сервер недоступен');
             return false;
         }
-      
-        $options = $this->_soap_config['soap_options'];
+        
+        $options = isset($this->_soap_config['soap_options']) ? $this->_soap_config['soap_options'] : array();
         $options['connection_timeout'] = $this->_connection_timeout;
-          
+        
         // Настройка stream context для таймаутов
         $stream_context = stream_context_create(array(
             'http' => array(
@@ -126,14 +126,32 @@ $this->_wsdl;
         try {
             $this->_soap_client = new SoapClient($this->_wsdl, $options);
             Kohana::$log->add(Log::INFO, 'SOAP клиент инициализирован');
-            $result= true;
+            return true;
         } catch (Exception $e) {
             Kohana::$log->add(Log::ERROR, 'SOAP init error: ' . $e->getMessage());
-            $result= false;
+            return false;
         }
-		
-		
-		return $result;
+    }
+    
+    /**
+     * Безопасное получение свойства из результата SOAP
+     * 
+     * @param object $result Результат SOAP вызова
+     * @param string $property Имя свойства
+     * @param mixed $default Значение по умолчанию
+     * @return mixed
+     */
+    protected function _getSoapProperty($result, $property, $default = null)
+    {
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+        
+        if (isset($result->$property)) {
+            return $result->$property;
+        }
+        
+        return $default;
     }
     
     /**
@@ -142,14 +160,13 @@ $this->_wsdl;
     protected function _call_soap($method, $params = array(), $retry = true)
     {
         // Быстрая проверка соединения перед вызовом
-		
         if (!$this->checkConnection()) {
             return (object) array(
                 'error' => true,
                 'message' => 'Сервер Parsec недоступен. Проверьте сетевое соединение. (таймаут ' . $this->_connection_timeout . ' сек)'
             );
         }
-      
+        
         if (!$this->_init_soap_client()) {
             return (object) array(
                 'error' => true,
@@ -194,8 +211,6 @@ $this->_wsdl;
      */
     public function getConnectionStatus()
     {
-        $this->_wsdl;
-        
         $start_time = microtime(true);
         $is_available = $this->checkConnection();
         $response_time = round((microtime(true) - $start_time) * 1000);
@@ -234,17 +249,22 @@ $this->_wsdl;
     }
     
     /**
+     * Получить WSDL URL
+     * 
+     * @return string
+     */
+    public function getWsdl()
+    {
+        return $this->_wsdl;
+    }
+    
+    /**
      * Получить версию SOAP сервера
      */
     public function getParsecSoapVersion()
     {
         $result = $this->_call_soap('GetVersion');
-        
-        if (isset($result->error) && $result->error) {
-            return $result;
-        }
-        
-        return $result->GetVersionResult;
+        return $this->_getSoapProperty($result, 'GetVersionResult', 'Неизвестно');
     }
     
     /**
@@ -253,9 +273,9 @@ $this->_wsdl;
     public function OpenSession()
     {
         $params = array(
-            'domain' => $this->_soap_config['domain'],
-            'userName' => $this->_soap_config['username'],
-            'password' => $this->_soap_config['password']
+            'domain' => isset($this->_soap_config['domain']) ? $this->_soap_config['domain'] : '',
+            'userName' => isset($this->_soap_config['username']) ? $this->_soap_config['username'] : '',
+            'password' => isset($this->_soap_config['password']) ? $this->_soap_config['password'] : ''
         );
         
         $result = $this->_call_soap('OpenSession', $params);
@@ -270,26 +290,11 @@ $this->_wsdl;
     /**
      * Получить список доменов
      */
-public function GetDomains()
-{
-    $result = $this->_call_soap('GetDomains');
-    
-    if (isset($result->error) && $result->error) {
-        return $result;
+    public function GetDomains()
+    {
+        $result = $this->_call_soap('GetDomains');
+        return $this->_getSoapProperty($result, 'GetDomainsResult', array());
     }
-    
-    // Проверяем, есть ли свойство GetDomainsResult
-    if (isset($result->GetDomainsResult)) {
-        return $result->GetDomainsResult;
-    }
-    
-    // Если свойство отсутствует, возвращаем результат как есть или пустой массив
-    return (object) array(
-        'error' => false,
-        'message' => 'Нет данных',
-        'data' => array()
-    );
-}
     
     /**
      * Получить корневое подразделение
@@ -303,7 +308,8 @@ public function GetDomains()
             );
         }
         
-        return $this->_call_soap('GetRootOrgUnit', array('sessionID' => $session_id));
+        $result = $this->_call_soap('GetRootOrgUnit', array('sessionID' => $session_id));
+        return $this->_getSoapProperty($result, 'GetRootOrgUnitResult', null);
     }
     
     /**
@@ -318,7 +324,8 @@ public function GetDomains()
             );
         }
         
-        return $this->_call_soap('GetOrgUnitsHierarhy', array('sessionID' => $session_id));
+        $result = $this->_call_soap('GetOrgUnitsHierarhy', array('sessionID' => $session_id));
+        return $this->_getSoapProperty($result, 'GetOrgUnitsHierarhyResult', null);
     }
     
     /**
@@ -402,10 +409,16 @@ public function GetDomains()
             );
         }
         
-        return $this->_call_soap('GetPersonIdentifiers', array(
+        $result = $this->_call_soap('GetPersonIdentifiers', array(
             'sessionID' => $session_id,
             'personID' => $person_id
         ));
+        
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+        
+        return $result;
     }
     
     /**
@@ -472,6 +485,14 @@ public function GetDomains()
         
         if (isset($edit_session->error) && $edit_session->error) {
             return $edit_session;
+        }
+        
+        // Проверяем наличие свойства Value
+        if (!isset($edit_session->OpenPersonEditingSessionResult->Value)) {
+            return (object) array(
+                'error' => true,
+                'message' => 'Не удалось получить сессию редактирования'
+            );
         }
         
         $session_guid = $edit_session->OpenPersonEditingSessionResult->Value;
@@ -554,10 +575,16 @@ public function GetDomains()
             );
         }
         
-        return $this->_call_soap('GetInheritedAccessGroups', array(
+        $result = $this->_call_soap('GetInheritedAccessGroups', array(
             'sessionID' => $session_id,
             'accessGroupID' => $access_group_id
         ));
+        
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+        
+        return $result;
     }
     
     /**
@@ -572,10 +599,16 @@ public function GetDomains()
             );
         }
         
-        return $this->_call_soap('GetIdentifierExtraData', array(
+        $result = $this->_call_soap('GetIdentifierExtraData', array(
             'sessionID' => $session_id,
             'cardCode' => strtoupper(trim($card_code))
         ));
+        
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+        
+        return $result;
     }
     
     /**
@@ -590,9 +623,15 @@ public function GetDomains()
             );
         }
         
-        return $this->_call_soap('GetObjectName', array(
+        $result = $this->_call_soap('GetObjectName', array(
             'sessionID' => $session_id,
             'objectID' => $object_id
         ));
+        
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+        
+        return $result;
     }
 }
