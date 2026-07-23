@@ -11,7 +11,10 @@ class Controller_Parsec extends Controller_Template {
 			$session = Session::instance();
 			//echo Debug::vars('9', $_POST, $_GET);
 			I18n::load('parsec');
-			$this->set_full_width(true);
+			    // Проверяем, существует ли метод set_full_width
+			if (method_exists($this, 'set_full_width')) {
+				$this->set_full_width(true);
+			}
 	}
 
 	

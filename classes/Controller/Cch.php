@@ -25,12 +25,28 @@ class Controller_Cch extends Controller_Template {
             
             // Открываем сессию
             $openSessionResult = $this->_cch_model->OpenSession();
+
             if (isset($openSessionResult->error) && $openSessionResult->error) {
-                $this->_session_error = $openSessionResult->message;
-                $this->_auth_error = 'Ошибка авторизации в Parsec: ' . $openSessionResult->message;
-            } else {
-                $this->_session_id = $openSessionResult->OpenSessionResult->Value->SessionID;
-            }
+    $this->_session_error = $openSessionResult->message;
+    $this->_auth_error = 'Ошибка авторизации в Parsec: ' . $openSessionResult->message;
+} else {
+    // Проверяем, есть ли ошибка в ответе SOAP
+    if (isset($openSessionResult->OpenSessionResult->Result) && $openSessionResult->OpenSessionResult->Result != 0) {
+        // Есть ошибка авторизации
+        $error_message = isset($openSessionResult->OpenSessionResult->ErrorMessage) 
+            ? $openSessionResult->OpenSessionResult->ErrorMessage 
+            : 'Неизвестная ошибка авторизации';
+        $this->_session_error = $error_message;
+        $this->_auth_error = 'Ошибка авторизации в Parsec: ' . $error_message;
+    } elseif (isset($openSessionResult->OpenSessionResult->Value->SessionID)) {
+        // Успешная авторизация
+        $this->_session_id = $openSessionResult->OpenSessionResult->Value->SessionID;
+    } else {
+        // Неизвестный формат ответа
+        $this->_session_error = 'Неизвестный формат ответа от сервера Parsec';
+        $this->_auth_error = 'Ошибка: ' . $this->_session_error;
+    }
+}
         }
     }
     
@@ -144,7 +160,7 @@ public function _mainView()
         if (isset($version->error) && $version->error) {
             $version = 'Ошибка: ' . $version->message;
         }
-        
+ 	
         $GetDomains = $pars->GetDomains();
         if (isset($GetDomains->error) && $GetDomains->error) {
             $GetDomains = 'Ошибка: ' . $GetDomains->message;
@@ -166,6 +182,7 @@ public function _mainView()
     
     // Формируем текст статуса сессии для отображения
     $session_status = '';
+	
     if ($this->_connection_error) {
         $session_status = 'Ошибка: ' . $this->_connection_error;
     } elseif ($this->_auth_error) {

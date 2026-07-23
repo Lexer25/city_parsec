@@ -11,6 +11,13 @@ class Model_Cch extends Model {
      * @var array Конфигурация SOAP
      */
     protected $_soap_config = null;
+	
+	/**
+     * @var string WSDL URL
+     */
+    protected $_wsdl = null;
+	
+	
     
     /**
      * @var int Таймаут подключения (секунды)
@@ -31,6 +38,8 @@ class Model_Cch extends Model {
     protected function _load_soap_config()
     {
         $this->_soap_config = Kohana::$config->load('soap.parsec');
+		        // Сохраняем WSDL в свойство класса
+        $this->_wsdl = $this->_soap_config['wsdl'];
     
         if (isset($this->_soap_config['connection_timeout'])) {
             $this->_connection_timeout = (int)$this->_soap_config['connection_timeout'];
@@ -44,11 +53,12 @@ class Model_Cch extends Model {
      */
     public function checkConnection()
     {
-        $wsdl = $this->_soap_config['wsdl'];
+       
+		$this->_wsdl;
         
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => $wsdl,
+            CURLOPT_URL => $this->_wsdl,
             CURLOPT_NOBODY => true,           // HEAD запрос (не скачиваем тело)
             CURLOPT_CONNECTTIMEOUT => $this->_connection_timeout,  // Таймаут подключения
             CURLOPT_TIMEOUT => $this->_connection_timeout,         // Общий таймаут
@@ -73,6 +83,7 @@ class Model_Cch extends Model {
         
         // Считаем соединение успешным при любом HTTP ответе (200, 301, 302, 401, 500 и т.д.)
         // Главное, что сервер ответил в течение таймаута
+
         if ($curl_error === '' && $http_code > 0) {
             return true;
         }
@@ -93,16 +104,17 @@ class Model_Cch extends Model {
             return true;
         }
 
-        
+$this->_wsdl;
+          
         // Быстрая проверка соединения перед инициализацией SOAP
         if (!$this->checkConnection()) {
             Kohana::$log->add(Log::ERROR, 'SOAP клиент не инициализирован: сервер недоступен');
             return false;
         }
-        
+      
         $options = $this->_soap_config['soap_options'];
         $options['connection_timeout'] = $this->_connection_timeout;
-        
+          
         // Настройка stream context для таймаутов
         $stream_context = stream_context_create(array(
             'http' => array(
@@ -114,11 +126,14 @@ class Model_Cch extends Model {
         try {
             $this->_soap_client = new SoapClient($wsdl, $options);
             Kohana::$log->add(Log::INFO, 'SOAP клиент инициализирован');
-            return true;
+            $result= true;
         } catch (Exception $e) {
             Kohana::$log->add(Log::ERROR, 'SOAP init error: ' . $e->getMessage());
-            return false;
+            $result= false;
         }
+		
+		
+		return $result;
     }
     
     /**
@@ -127,20 +142,21 @@ class Model_Cch extends Model {
     protected function _call_soap($method, $params = array(), $retry = true)
     {
         // Быстрая проверка соединения перед вызовом
+		
         if (!$this->checkConnection()) {
             return (object) array(
                 'error' => true,
                 'message' => 'Сервер Parsec недоступен. Проверьте сетевое соединение. (таймаут ' . $this->_connection_timeout . ' сек)'
             );
         }
-        
+      
         if (!$this->_init_soap_client()) {
             return (object) array(
                 'error' => true,
                 'message' => 'Не удалось подключиться к SOAP серверу Parsec'
             );
         }
-        
+
         try {
             $result = $this->_soap_client->$method($params);
             return $result;
@@ -178,7 +194,7 @@ class Model_Cch extends Model {
      */
     public function getConnectionStatus()
     {
-        $wsdl = $this->_soap_config['wsdl'];
+        $this->_wsdl;
         
         $start_time = microtime(true);
         $is_available = $this->checkConnection();
@@ -199,7 +215,7 @@ class Model_Cch extends Model {
                 'connected' => false,
                 'response_time_ms' => $response_time,
                 'message' => 'Не удалось подключиться к серверу Parsec',
-                'wsdl' => $wsdl,
+                'wsdl' => $this->_wsdl,
                 'timeout' => $this->_connection_timeout
             );
         }
