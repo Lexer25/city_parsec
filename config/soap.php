@@ -2,7 +2,7 @@
 
 return array(
     'parsec' => array(
-        'wsdl' => 'http://172.16.0.9:10101/IntegrationService/IntegrationService.asmx?wsdl',
+        'wsdl' => 'http://127.0.0.1:10101/IntegrationService/IntegrationService.asmx?wsdl',
         'domain' => '',
         'username' => 'parsec',
         'password' => 'parsec',

@@ -124,7 +124,7 @@ $this->_wsdl;
         $options['stream_context'] = $stream_context;
         
         try {
-            $this->_soap_client = new SoapClient($wsdl, $options);
+            $this->_soap_client = new SoapClient($this->_wsdl, $options);
             Kohana::$log->add(Log::INFO, 'SOAP клиент инициализирован');
             $result= true;
         } catch (Exception $e) {
@@ -206,7 +206,7 @@ $this->_wsdl;
                 'connected' => true,
                 'response_time_ms' => $response_time,
                 'message' => 'Соединение с сервером Parsec установлено',
-                'wsdl' => $wsdl,
+                'wsdl' => $this->_wsdl,
                 'timeout' => $this->_connection_timeout
             );
         } else {
@@ -270,16 +270,26 @@ $this->_wsdl;
     /**
      * Получить список доменов
      */
-    public function GetDomains()
-    {
-        $result = $this->_call_soap('GetDomains');
-        
-        if (isset($result->error) && $result->error) {
-            return $result;
-        }
-        
+public function GetDomains()
+{
+    $result = $this->_call_soap('GetDomains');
+    
+    if (isset($result->error) && $result->error) {
+        return $result;
+    }
+    
+    // Проверяем, есть ли свойство GetDomainsResult
+    if (isset($result->GetDomainsResult)) {
         return $result->GetDomainsResult;
     }
+    
+    // Если свойство отсутствует, возвращаем результат как есть или пустой массив
+    return (object) array(
+        'error' => false,
+        'message' => 'Нет данных',
+        'data' => array()
+    );
+}
     
     /**
      * Получить корневое подразделение
