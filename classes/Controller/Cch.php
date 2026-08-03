@@ -72,6 +72,19 @@ class Controller_Cch extends Controller_Template {
     }
     
     /**
+     * Получить список организаций
+     */
+    public function action_GetOrgUnitsHierarhy()
+    {
+        if (!$this->_checkSession()) return;
+        
+        $GetPerson = $this->_cch_model->GetOrgUnitsHierarhy($this->_session_id);
+        $content = View::factory('cch/search')->set('result', $GetPerson);
+        $content = $this->_addErrorAlert($content);
+        $this->template->content = $content;
+    }
+    
+    /**
      * GetPersonIdentifiers
      */
     public function action_GetPersonIdentifiers()
@@ -407,6 +420,8 @@ public function _mainView()
         $this->template->content = $content;
     }
     
+    
+    
     // --- вспомогательные методы ---
     
     protected function _getOrgList()
@@ -480,7 +495,7 @@ public function _mainView()
     
     try {
         // Проверяем, существует ли запись с таким GUID
-        $checkSql = 'SELECT COUNT(*) FROM ACCESSNAME WHERE GUID = \''.$guid.'\'';
+        $checkSql = 'SELECT COUNT(*)  FROM ACCESSNAME WHERE GUID = \''.$guid.'\'';
         $checkQuery = DB::query(Database::SELECT, $checkSql)
             ->execute(Database::instance('fb'))
             ->as_array();
@@ -498,7 +513,7 @@ public function _mainView()
         Log::instance()->add(Log::NOTICE, 'Выполняется INSERT: ' . $sql);
         
         // Для PDO используем параметры через метод parameters()
-        $query = DB::query(Database::INSERT, iconv('windows-1251', 'UTF-8', $sql))
+        $query = DB::query(Database::INSERT, iconv('UTF-8', 'windows-1251', $sql))
 
             ->execute(Database::instance('fb'));
         

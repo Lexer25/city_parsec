@@ -260,3 +260,14 @@
 </div>
 
 
+<div class="panel panel-primary col-md-10 col-md-offset-1">
+  <div class="panel-heading row">
+    <h3 class="panel-title ">GetOrgUnitsHiearhy Получить иерархию подразделений</h3>
+  </div>
+  <form role="form" action="GetOrgUnitsHierarhy" method="POST">
+	<button type="submit" class="btn btn-default">Отправить</button>
+</form>
+
+</div>
+
+
