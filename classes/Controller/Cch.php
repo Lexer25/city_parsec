@@ -467,29 +467,50 @@ public function _mainView()
         return array();
     }
     
-    protected function _addAccessName($data)
-    {
-        // Этот метод почти не используется и содержит ошибки.
-        // Оставлен как есть, но лучше переписать или удалить.
-        if ($this->uniqueGuid(Arr::get($data, 'guid'))) {
-            echo '555';
-        } else {
-            echo '666';
-        }
-        $sql = 'INSERT INTO ACCESSNAME (ID_DB, NAME, GUID) VALUES (1, :name, :guid)';
-        try {
-            Log::instance()->add(Log::NOTICE, '425 ' . $sql);
-            $query = DB::query(Database::INSERT, $sql)
-                ->param(':name', Arr::get($data, 'name'))
-                ->param(':guid', Arr::get($data, 'guid'))
-                ->execute(Database::instance('fb'));
-            echo Debug::vars('418', $sql, $query);
-            exit;
-        } catch (Exception $e) {
-            // ignore
-        }
-        return;
+   protected function _addAccessName($data)
+{
+    // Проверяем существование GUID
+    $guid = Arr::get($data, 'guid');
+    $name = Arr::get($data, 'name');
+    
+    if (empty($guid) || empty($name)) {
+        Log::instance()->add(Log::WARNING, 'Отсутствуют обязательные параметры: guid или name');
+        return false;
     }
+    
+    try {
+        // Проверяем, существует ли запись с таким GUID
+        $checkSql = 'SELECT COUNT(*) FROM ACCESSNAME WHERE GUID = \''.$guid.'\'';
+        $checkQuery = DB::query(Database::SELECT, $checkSql)
+            ->execute(Database::instance('fb'))
+            ->as_array();
+        
+        $exists = (int)$checkQuery[0]['COUNT'] > 0;
+        
+        if ($exists) {
+            Log::instance()->add(Log::NOTICE, 'Запись с GUID ' . $guid . ' уже существует');
+            return false;
+        }
+        
+        // Вставляем новую запись
+        $sql = 'INSERT INTO ACCESSNAME (ID_DB, NAME, GUID) VALUES (1, \''.$name.'\', \''.$guid.'\')';
+        
+        Log::instance()->add(Log::NOTICE, 'Выполняется INSERT: ' . $sql);
+        
+        // Для PDO используем параметры через метод parameters()
+        $query = DB::query(Database::INSERT, iconv('windows-1251', 'UTF-8', $sql))
+
+            ->execute(Database::instance('fb'));
+        
+        Log::instance()->add(Log::NOTICE, 'Запись успешно добавлена. ID: ' . $query);
+        
+        return $query; // Возвращаем ID новой записи
+        
+    } catch (Exception $e) {
+        Log::instance()->add(Log::ERROR, 'Ошибка при вставке записи: ' . $e->getMessage());
+        return false;
+    }
+}
     
     public static function uniqueGuid($guid)
     {

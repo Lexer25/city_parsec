@@ -109,6 +109,8 @@ if ($has_error) {
     </div>
 </div>
 
+<!-- БЛОК ПАРАМЕТРОВ ПОДКЛЮЧЕНИЯ -->
+
 <div class="panel panel-primary">
     <div class="panel-heading">
         <h3 class="panel-title"><?php echo __('connectionString');?></h3>
@@ -155,6 +157,8 @@ if ($has_error) {
     </div>
 </div>
 
+<!-- БЛОК СОДЕРЖИМОЕ ФАЙЛА КОНФИГУРАЦИИ -->
+
 <div class="panel panel-primary">
     <div class="panel-heading">
         <h3 class="panel-title"><?php echo __('connectionString');?></h3>
@@ -200,6 +204,8 @@ if ($has_error) {
         <?php } ?>
     </div>
 </div>
+
+<!-- БЛОК КАТЕГОРИЙ ДОСТУПА-->
 
 <div class="panel panel-primary">
 <?php echo View::factory('parsec/_nav'); ?>
