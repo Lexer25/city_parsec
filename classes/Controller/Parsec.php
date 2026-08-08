@@ -13,7 +13,7 @@ class Controller_Parsec extends Controller_Template {
 			I18n::load('parsec');
 			    // Проверяем, существует ли метод set_full_width
 			if (method_exists($this, 'set_full_width')) {
-				$this->set_full_width(true);
+				$this->set_full_width(false);
 			}
 	}
 

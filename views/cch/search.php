@@ -1,5 +1,7 @@
  <?php
-
+// ===== ШАПКА В САМОМ НАЧАЛЕ =====
+echo View::factory('parsec/_nav');
+// ===== КОНЕЦ ШАПКИ =====
  if(isset($result)){
 	 echo Debug::vars('5', $result);
 	
@@ -49,7 +51,7 @@
  
  
  
- echo View::factory('parsec/_nav');
+
  
  ?>
  

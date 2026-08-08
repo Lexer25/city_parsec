@@ -7,7 +7,8 @@ return array(
         'username' => 'parsec',
         'password' => 'parsec',
         'connection_timeout' => 10,
-        'soap_options' => array(
+		'mock_mode' => true,   // ← true - для отладки, false - для работы
+		  'soap_options' => array(
             'trace' => 1,
             'exceptions' => 1,
             'cache_wsdl' => WSDL_CACHE_NONE,

@@ -49,7 +49,22 @@ if ($has_error) {
     $session_status_text = 'НЕТ';
     $auth_status_text = '—';
 }
+
+$mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === true;
 ?>
+
+<!-- ===== ШАПКА В САМОМ НАЧАЛЕ ===== -->
+<?php echo View::factory('parsec/_nav'); ?>
+<!-- ===== КОНЕЦ ШАПКИ ===== -->
+
+<?php if ($mock_mode): ?>
+<div class="alert alert-warning" style="margin-bottom: 20px; border-left: 5px solid #f0ad4e;">
+    <strong><span class="glyphicon glyphicon-flash"></span> РЕЖИМ MOCK:</strong> 
+    Реальный SOAP-сервер не используется. Все данные генерируются для отладки.
+    <br><small>Отключите в <code>modules/parsec/config/soap.php</code> параметр <code>mock_mode</code></small>
+</div>
+<?php endif; ?>
+
 
 <!-- БЛОК СОСТОЯНИЯ ПОДКЛЮЧЕНИЯ -->
 <div class="panel <?php echo $status_class; ?>" style="margin-bottom: 20px;">
@@ -208,7 +223,7 @@ if ($has_error) {
 <!-- БЛОК КАТЕГОРИЙ ДОСТУПА-->
 
 <div class="panel panel-primary">
-<?php echo View::factory('parsec/_nav'); ?>
+
   <div class="panel-heading">
     <h3 class="panel-title"><?php echo __('info')?></h3>
   </div>

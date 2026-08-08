@@ -52,7 +52,15 @@ class Model_Cch extends Model {
      */
     public function checkConnection()
     {
-        if (empty($this->_wsdl)) {
+        // === ДОБАВИТЬ: В режиме mock всегда возвращаем true ===
+    $mock_mode = isset($this->_soap_config['mock_mode']) && $this->_soap_config['mock_mode'] === true;
+    if ($mock_mode) {
+        return true;
+    }
+    // === КОНЕЦ ДОБАВЛЕНИЯ ===
+    
+	
+		if (empty($this->_wsdl)) {
             Kohana::$log->add(Log::ERROR, 'WSDL не задан в конфигурации');
             return false;
         }
@@ -94,44 +102,66 @@ class Model_Cch extends Model {
      * 
      * @return bool
      */
-    protected function _init_soap_client()
-    {
-        // Не инициализируем повторно, если уже есть
-        if ($this->_soap_client !== null) {
-            return true;
-        }
+protected function _init_soap_client()
+{
+ if ($this->_soap_client !== null) {
+        return true;
+    }
+    
+    if (empty($this->_wsdl)) {
+        Kohana::$log->add(Log::ERROR, 'WSDL не задан в конфигурации');
+        return false;
+    }
+    
+    // === MOCK ===
+    $mock_mode = isset($this->_soap_config['mock_mode']) && $this->_soap_config['mock_mode'] === true;
+    
+    if ($mock_mode) {
+        Kohana::$log->add(Log::INFO, 'Запуск в режиме MOCK');
         
-        if (empty($this->_wsdl)) {
-            Kohana::$log->add(Log::ERROR, 'WSDL не задан в конфигурации');
-            return false;
-        }
-        
-        // Быстрая проверка соединения перед инициализацией SOAP
-        if (!$this->checkConnection()) {
-            Kohana::$log->add(Log::ERROR, 'SOAP клиент не инициализирован: сервер недоступен');
+        if (!class_exists('MockSoapClient')) {
+            Kohana::$log->add(Log::ERROR, 'Класс MockSoapClient не найден');
             return false;
         }
         
         $options = isset($this->_soap_config['soap_options']) ? $this->_soap_config['soap_options'] : array();
         $options['connection_timeout'] = $this->_connection_timeout;
         
-        // Настройка stream context для таймаутов
-        $stream_context = stream_context_create(array(
-            'http' => array(
-                'timeout' => $this->_connection_timeout
-            )
-        ));
-        $options['stream_context'] = $stream_context;
-        
         try {
-            $this->_soap_client = new SoapClient($this->_wsdl, $options);
-            Kohana::$log->add(Log::INFO, 'SOAP клиент инициализирован');
+            $this->_soap_client = new MockSoapClient($this->_wsdl, $options);
             return true;
         } catch (Exception $e) {
-            Kohana::$log->add(Log::ERROR, 'SOAP init error: ' . $e->getMessage());
+            Kohana::$log->add(Log::ERROR, 'MockSoapClient init error: ' . $e->getMessage());
             return false;
         }
     }
+    // === КОНЕЦ MOCK ===
+    
+    // Оригинальный код для реального режима
+    if (!$this->checkConnection()) {
+        Kohana::$log->add(Log::ERROR, 'SOAP клиент не инициализирован: сервер недоступен');
+        return false;
+    }
+    
+    $options = isset($this->_soap_config['soap_options']) ? $this->_soap_config['soap_options'] : array();
+    $options['connection_timeout'] = $this->_connection_timeout;
+    
+    $stream_context = stream_context_create(array(
+        'http' => array(
+            'timeout' => $this->_connection_timeout
+        )
+    ));
+    $options['stream_context'] = $stream_context;
+    
+    try {
+        $this->_soap_client = new SoapClient($this->_wsdl, $options);
+        Kohana::$log->add(Log::INFO, 'SOAP клиент инициализирован');
+        return true;
+    } catch (Exception $e) {
+        Kohana::$log->add(Log::ERROR, 'SOAP init error: ' . $e->getMessage());
+        return false;
+    }
+}
     
     /**
      * Безопасное получение свойства из результата SOAP
@@ -157,52 +187,57 @@ class Model_Cch extends Model {
     /**
      * Безопасный вызов SOAP метода с быстрой проверкой
      */
-    protected function _call_soap($method, $params = array(), $retry = true)
-    {
-        // Быстрая проверка соединения перед вызовом
+protected function _call_soap($method, $params = array(), $retry = true)
+{
+    $mock_mode = isset($this->_soap_config['mock_mode']) && $this->_soap_config['mock_mode'] === true;
+    
+    // В реальном режиме — проверяем соединение
+    if (!$mock_mode) {
         if (!$this->checkConnection()) {
             return (object) array(
                 'error' => true,
                 'message' => 'Сервер Parsec недоступен. Проверьте сетевое соединение. (таймаут ' . $this->_connection_timeout . ' сек)'
             );
         }
-        
-        if (!$this->_init_soap_client()) {
-            return (object) array(
-                'error' => true,
-                'message' => 'Не удалось подключиться к SOAP серверу Parsec'
-            );
-        }
-
-        try {
-            $result = $this->_soap_client->$method($params);
-            return $result;
-        } catch (SoapFault $e) {
-            Kohana::$log->add(Log::ERROR, "SOAP {$method} fault: " . $e->getMessage());
-            
-            if ($retry) {
-                $this->_soap_client = null;
-                return $this->_call_soap($method, $params, false);
-            }
-            
-            return (object) array(
-                'error' => true,
-                'message' => 'Ошибка SOAP: ' . $e->getMessage()
-            );
-        } catch (Exception $e) {
-            Kohana::$log->add(Log::ERROR, "SOAP {$method} error: " . $e->getMessage());
-            
-            if ($retry) {
-                $this->_soap_client = null;
-                return $this->_call_soap($method, $params, false);
-            }
-            
-            return (object) array(
-                'error' => true,
-                'message' => 'Ошибка подключения: ' . $e->getMessage()
-            );
-        }
     }
+    
+    // Инициализируем клиент (в mock-режиме создаст MockSoapClient)
+    if (!$this->_init_soap_client()) {
+        return (object) array(
+            'error' => true,
+            'message' => 'Не удалось подключиться к SOAP серверу Parsec'
+        );
+    }
+
+    try {
+        $result = $this->_soap_client->$method($params);
+        return $result;
+    } catch (SoapFault $e) {
+        Kohana::$log->add(Log::ERROR, "SOAP {$method} fault: " . $e->getMessage());
+        
+        if ($retry && !$mock_mode) {
+            $this->_soap_client = null;
+            return $this->_call_soap($method, $params, false);
+        }
+        
+        return (object) array(
+            'error' => true,
+            'message' => 'Ошибка SOAP: ' . $e->getMessage()
+        );
+    } catch (Exception $e) {
+        Kohana::$log->add(Log::ERROR, "SOAP {$method} error: " . $e->getMessage());
+        
+        if ($retry && !$mock_mode) {
+            $this->_soap_client = null;
+            return $this->_call_soap($method, $params, false);
+        }
+        
+        return (object) array(
+            'error' => true,
+            'message' => 'Ошибка подключения: ' . $e->getMessage()
+        );
+    }
+}
     
     /**
      * Получить статус соединения с SOAP сервером
@@ -211,7 +246,23 @@ class Model_Cch extends Model {
      */
     public function getConnectionStatus()
     {
-        $start_time = microtime(true);
+    // MOCK: всегда успешно
+    $mock_mode = isset($this->_soap_config['mock_mode']) && $this->_soap_config['mock_mode'] === true;
+    
+    if ($mock_mode) {
+        return (object) array(
+            'error' => false,
+            'connected' => true,
+            'response_time_ms' => 0,
+            'message' => 'MOCK-режим: соединение с сервером Parsec имитируется',
+            'wsdl' => $this->_wsdl,
+            'timeout' => $this->_connection_timeout,
+            'mock_mode' => true
+        );
+    }
+    // === КОНЕЦ ДОБАВЛЕНИЯ ===
+	
+		$start_time = microtime(true);
         $is_available = $this->checkConnection();
         $response_time = round((microtime(true) - $start_time) * 1000);
         
