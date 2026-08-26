@@ -496,10 +496,12 @@ protected function _call_soap($method, $params = array(), $retry = true)
         return $result;
     }
     
-    /**
-     * Получить информацию о подразделении (организации)
+
+	
+	/**
+     * Получить информацию о people
      */
-    public function GetOrgUnit($session_id, $org_unit_id)
+    public function GetPeopleUnit($session_id, $org_unit_id)
     {
         if (empty($session_id) || empty($org_unit_id)) {
             return (object) array(
@@ -519,6 +521,8 @@ protected function _call_soap($method, $params = array(), $retry = true)
         
         return $result;
     }
+	
+	
     
     /**
      * Добавить идентификатор персоне

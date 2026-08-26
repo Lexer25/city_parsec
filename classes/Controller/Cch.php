@@ -393,6 +393,42 @@ public function _mainView()
     }
     
     /**
+     * Сравнение пиплов в БД СКУД и в БД Парсек.
+     */
+    public function action_comparePeople()
+    {
+        if (!$this->_checkSession()) return;
+        
+        $addPep = isset($_POST['addPeople']) ? true : false;
+        $original_time_limit = ini_get('max_execution_time');
+        set_time_limit(600);
+       
+        $orgList = $this->_getPeopleList();
+        $resultList = array();
+        $timestart = microtime(true);
+        $resultList['pepcount'] = count($orgList);
+        
+        foreach (array_slice($orgList, 4000, 1000) as $value) {
+            $guid = Arr::get($value, 'GUID');
+            $orgUnit = $this->_cch_model->GetPerson($this->_session_id, $guid);
+            $orgUnitArray = (array) $orgUnit;
+            if (empty($orgUnitArray)) {
+                $resultList['person_not_in_parsec'][] = $guid;
+                if ($addPep) {
+                 ///   $this->_addPepistTask($guid);
+                }
+            }
+        }
+        
+        $resultList['timeexcute'] = (microtime(true) - $timestart);
+        set_time_limit($original_time_limit);
+        
+        $content = View::factory('cch/search')->set('result', $resultList);
+        $content = $this->_addErrorAlert($content);
+        $this->template->content = $content;
+    }
+    
+    /**
      * Проверка очереди задач интегратора.
      */
     public function action_chectTaskOrder()
@@ -427,6 +463,16 @@ public function _mainView()
     protected function _getOrgList()
     {
         $sql = 'select o.guid from organization o';
+        return DB::query(Database::SELECT, $sql)
+            ->execute(Database::instance('fb'))
+            ->as_array();
+    }
+    
+    protected function _getPeopleList()
+    {
+        $sql = 'select p.guid from people p
+			where p.guid is not null
+			';
         return DB::query(Database::SELECT, $sql)
             ->execute(Database::instance('fb'))
             ->as_array();

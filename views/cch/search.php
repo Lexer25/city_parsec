@@ -227,7 +227,7 @@ echo View::factory('parsec/_nav');
 
 <div class="panel panel-primary col-md-10 col-md-offset-1">
   <div class="panel-heading row">
-    <h3 class="panel-title ">Сверка организаций</h3>
+    <h3 class="panel-title ">compareOrg Сверка организаций</h3>
   </div>
   <form role="form" action="compareOrg" method="POST">
 	 <label>
@@ -237,6 +237,20 @@ echo View::factory('parsec/_nav');
 	<button type="submit" class="btn btn-default">Отправить</button>
 </form>
  Результат: список организаций, которые есть в БД СКУД Артонит, но не в БД ПАРСЕК.
+</div>
+
+<div class="panel panel-primary col-md-10 col-md-offset-1">
+  <div class="panel-heading row">
+    <h3 class="panel-title ">comparePeople Сверка персон</h3>
+  </div>
+  <form role="form" action="comparePeople" method="POST">
+	 <label>
+        <input type="checkbox" name="addOrg" value="1">Добавлять в задачи
+      </label>
+<br>
+	<button type="submit" class="btn btn-default">Отправить</button>
+</form>
+ Результат: список персон, которые есть в БД СКУД Артонит, но не в БД ПАРСЕК.
 </div>
 
 
