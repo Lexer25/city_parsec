@@ -159,15 +159,26 @@ class Controller_Cch extends Controller_Template {
         $this->template->content = $content;
     }
     
-    public function action_index()
-    {
-        if ($this->request->method() === 'POST') {
-            $this->_addAccessName($_POST);
-            $this->_mainView();
-        } else {
-            $this->_mainView();
-        }
-    }
+	public function action_index()
+	{
+		if ($this->request->method() === 'POST') {
+			$post = $this->request->post();
+			
+			// Проверяем, какая кнопка была нажата
+			if (isset($post['addAccessName'])) {
+				// Добавление новой категории доступа
+				$this->_addAccessName($post);
+			} elseif (isset($post['updateName'])) {
+				// Обновление существующей категории доступа
+				$this->_updateAccessName($post);
+			}
+			
+			// После обработки показываем главную страницу
+			$this->_mainView();
+		} else {
+			$this->_mainView();
+		}
+	}
     
 public function _mainView()
 {
@@ -546,49 +557,91 @@ public function _mainView()
     }
     
    protected function _addAccessName($data)
-{
-    // Проверяем существование GUID
-    $guid = Arr::get($data, 'guid');
-    $name = Arr::get($data, 'name');
+	{
+		// Проверяем существование GUID
+		$guid = Arr::get($data, 'guid');
+		$name = Arr::get($data, 'name');
+		
+		if (empty($guid) || empty($name)) {
+			Log::instance()->add(Log::WARNING, 'Отсутствуют обязательные параметры: guid или name');
+			return false;
+		}
+		
+		try {
+			// Проверяем, существует ли запись с таким GUID
+			$checkSql = 'SELECT COUNT(*)  FROM ACCESSNAME WHERE GUID = \''.$guid.'\'';
+			$checkQuery = DB::query(Database::SELECT, $checkSql)
+				->execute(Database::instance('fb'))
+				->as_array();
+			
+			$exists = (int)$checkQuery[0]['COUNT'] > 0;
+			
+			if ($exists) {
+				Log::instance()->add(Log::NOTICE, 'Запись с GUID ' . $guid . ' уже существует');
+				return false;
+			}
+			
+			// Вставляем новую запись
+			$sql = 'INSERT INTO ACCESSNAME (ID_DB, NAME, GUID) VALUES (1, \''.$name.'\', \''.$guid.'\')';
+			
+			Log::instance()->add(Log::NOTICE, 'Выполняется INSERT: ' . $sql);
+			$query = DB::query(Database::INSERT, iconv('UTF-8', 'windows-1251', $sql))
+				->execute(Database::instance('fb'));
+			
+			Log::instance()->add(Log::NOTICE, 'Запись успешно добавлена. ID: ' . $query);
+			
+			return $query; // Возвращаем ID новой записи
+			
+		} catch (Exception $e) {
+			Log::instance()->add(Log::ERROR, 'Ошибка при вставке записи: ' . $e->getMessage());
+			return false;
+		}
+	}
     
-    if (empty($guid) || empty($name)) {
-        Log::instance()->add(Log::WARNING, 'Отсутствуют обязательные параметры: guid или name');
-        return false;
-    }
-    
-    try {
-        // Проверяем, существует ли запись с таким GUID
-        $checkSql = 'SELECT COUNT(*)  FROM ACCESSNAME WHERE GUID = \''.$guid.'\'';
-        $checkQuery = DB::query(Database::SELECT, $checkSql)
-            ->execute(Database::instance('fb'))
-            ->as_array();
-        
-        $exists = (int)$checkQuery[0]['COUNT'] > 0;
-        
-        if ($exists) {
-            Log::instance()->add(Log::NOTICE, 'Запись с GUID ' . $guid . ' уже существует');
-            return false;
-        }
-        
-        // Вставляем новую запись
-        $sql = 'INSERT INTO ACCESSNAME (ID_DB, NAME, GUID) VALUES (1, \''.$name.'\', \''.$guid.'\')';
-        
-        Log::instance()->add(Log::NOTICE, 'Выполняется INSERT: ' . $sql);
-        
-        // Для PDO используем параметры через метод parameters()
-        $query = DB::query(Database::INSERT, iconv('UTF-8', 'windows-1251', $sql))
-
-            ->execute(Database::instance('fb'));
-        
-        Log::instance()->add(Log::NOTICE, 'Запись успешно добавлена. ID: ' . $query);
-        
-        return $query; // Возвращаем ID новой записи
-        
-    } catch (Exception $e) {
-        Log::instance()->add(Log::ERROR, 'Ошибка при вставке записи: ' . $e->getMessage());
-        return false;
-    }
-}
+    protected function _updateAccessName($data)
+	{
+		// Проверяем существование GUID
+		$guid = Arr::get($data, 'guid');
+		$name = Arr::get($data, 'name');
+		
+		if (empty($guid) || empty($name)) {
+			Log::instance()->add(Log::WARNING, 'Отсутствуют обязательные параметры: guid или name');
+			return false;
+		}
+		
+		try {
+			// Проверяем, существует ли запись с таким GUID
+			$checkSql = 'SELECT COUNT(*)  FROM ACCESSNAME WHERE GUID = \''.$guid.'\'';
+			$checkQuery = DB::query(Database::SELECT, $checkSql)
+				->execute(Database::instance('fb'))
+				->as_array();
+			
+			$exists = (int)$checkQuery[0]['COUNT'] > 0;
+			
+			if (!$exists) {
+				Log::instance()->add(Log::NOTICE, 'Запись с GUID ' . $guid . ' осутсвует, обновление невомозжно.');
+				return false;
+			}
+			
+			// Вставляем новую запись
+			$sql = 'INSERT INTO ACCESSNAME (ID_DB, NAME, GUID) VALUES (1, \''.$name.'\', \''.$guid.'\')';
+			$sql = 'update accessname an
+					set an.name=\''.$name.'\'
+					where an.guid=\''.$guid.'\'';
+			
+			Log::instance()->add(Log::NOTICE, 'Выполняется UPDATE: ' . $sql);
+			$query = DB::query(Database::UPDATE, iconv('UTF-8', 'windows-1251', $sql))
+				->execute(Database::instance('fb'));
+			
+			Log::instance()->add(Log::NOTICE, 'Запись успешно обновлена. ID: ' . $query);
+			
+			return $query; // Возвращаем ID новой записи
+			
+		} catch (Exception $e) {
+			Log::instance()->add(Log::ERROR, 'Ошибка при вставке записи: ' . $e->getMessage());
+			return false;
+		}
+	}
     
     public static function uniqueGuid($guid)
     {

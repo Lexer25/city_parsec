@@ -222,78 +222,73 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
 
 <!-- БЛОК КАТЕГОРИЙ ДОСТУПА-->
 
+<!-- БЛОК КАТЕГОРИЙ ДОСТУПА-->
 <div class="panel panel-primary">
-
-  <div class="panel-heading">
-    <h3 class="panel-title"><?php echo __('info')?></h3>
-  </div>
-  <div class="panel-body">
-    <table class='table table-striped'>
-      <tr>
-        <th><?php echo __('№ п/п')?></th>
-        <th><?php echo __('param')?></th>
-        <th><?php echo __('Значение')?></th>
-      </tr>
-      <?php $i=1; ?>
-      <tr>
-        <td><?php echo $i++;?></td>
-        <td>version</td>
-        <td><?php echo is_string($version) ? htmlspecialchars($version) : Debug::vars($version); ?></td>
-      </tr>
-    
-      <tr>
-        <td><?php echo $i++;?></td>
-        <td>GetAccessGroups<br>Список категорий доступа</td>
-        <td>
-          <?php 
-          if (is_string($GetAccessGroups)) {
-              echo htmlspecialchars($GetAccessGroups);
-          } elseif (is_object($GetAccessGroups) && property_exists($GetAccessGroups, 'GetAccessGroupsResult')) {
-              foreach ($GetAccessGroups->GetAccessGroupsResult as $var) {
-                  $ii=0;
-                  ?>
-                  <table class='table table-striped'>
+    <div class="panel-heading">
+        <h3 class="panel-title"><?php echo __('info')?></h3>
+    </div>
+    <div class="panel-body">
+        <table class='table table-striped'>
+            <tr>
+                <th><?php echo __('№ п/п')?></th>
+                <th><?php echo __('GUID')?></th>
+                <th><?php echo __('NAME_in_PARSEC')?></th>
+                <th><?php echo __('IDENTIFTYPE')?></th>
+                <th><?php echo __('NAME_in_ARTONIT')?></th>
+                <th><?php echo __('ToDo')?></th>
+            </tr>
+            <?php 
+            if (is_string($GetAccessGroups)) {
+                echo '<tr><td colspan="6">' . htmlspecialchars($GetAccessGroups) . '</td></tr>';
+            } elseif (is_object($GetAccessGroups) && property_exists($GetAccessGroups, 'GetAccessGroupsResult')) {
+                foreach ($GetAccessGroups->GetAccessGroupsResult as $var) {
+                    $ii=0;
+                    ?>
                     <tr>
-                      <th><?php echo __('№ п/п')?></th>
-                      <th><?php echo __('GUID')?></th>
-                      <th><?php echo __('NAME_in_PARSEC')?></th>
-                      <th><?php echo __('IDENTIFTYPE')?></th>
-                      <th><?php echo __('NAME_in_ARTONIT')?></th>
-                      <th><?php echo __('ToDo')?></th>
+                        <th colspan="6">Группа <?php echo ++$ii; ?></th>
                     </tr>
                     <?php foreach ($var as $list) { ?>
-                      <tr>
-                        <td><?php echo ++$ii;?></td>
-                        <td><?php echo $list->ID;?></td>
-                        <td><?php echo htmlspecialchars($list->NAME);?></td>
-                        <td><?php echo $list->IDENTIFTYPE;?></td>
-                        <td><?php 
-                          $artonitName = Arr::get(Arr::get($getAccessArtonit, $list->ID), 'name');
-                          echo $artonitName ? iconv('windows-1251', 'UTF-8', $artonitName) : '—';
-                        ?></td>
-                        <td>
-                          <?php 
-                          if ($getAccessArtonit && array_key_exists($list->ID, $getAccessArtonit)) {
-                              echo 'Уже есть';
-                          } else {
-                              echo Form::open();
-                              echo Form::hidden('guid', $list->ID);
-                              echo Form::hidden('name', $list->NAME);
-                              echo Form::submit(NULL, __('addAccessName'));
-                              echo Form::close();
-                          }
-                          ?>
-                        </td>
-                      </tr>
+                        <tr>
+                            <td><?php echo $ii;?></td>
+                            <td><?php echo $list->ID;?></td>
+                            <td><?php echo htmlspecialchars($list->NAME);?></td>
+                            <td><?php echo $list->IDENTIFTYPE;?></td>
+                            <td>
+                                <?php 
+                                $artonitName = Arr::get(Arr::get($getAccessArtonit, $list->ID), 'name');
+                                echo $artonitName ? iconv('windows-1251', 'UTF-8', $artonitName) : '—';
+                                ?>
+                            </td>
+                            <td>
+                                <?php 
+                                if ($getAccessArtonit && array_key_exists($list->ID, $getAccessArtonit)) {
+                                    // Категория уже есть в Артонит
+                                    ?>
+                                    <?php echo Form::open(); ?>
+                                    <?php echo Form::hidden('guid', $list->ID); ?>
+                                    <?php echo Form::hidden('name', $list->NAME); ?>
+                                    <?php echo Form::submit('updateName', __('Обновить название'), array('class' => 'btn btn-warning btn-sm')); ?>
+                                    <?php echo Form::close(); ?>
+                                    <?php
+                                } else {
+                                    // Категории нет в Артонит
+                                    ?>
+                                    <?php echo Form::open(); ?>
+                                    <?php echo Form::hidden('guid', $list->ID); ?>
+                                    <?php echo Form::hidden('name', $list->NAME); ?>
+                                    <?php echo Form::submit('addAccessName', __('Добавить в Артонит'), array('class' => 'btn btn-success btn-sm')); ?>
+                                    <?php echo Form::close(); ?>
+                                    <?php
+                                }
+                                ?>
+                            </td>
+                        </tr>
                     <?php } ?>
-                  </table>
-              <?php }
-          } else {
-              echo 'Нет данных или ошибка';
-          }
-          ?>
-        </td>
-      </tr>
-    </table>
-  </div>
+                <?php }
+            } else {
+                echo '<tr><td colspan="6">Нет данных или ошибка</td></tr>';
+            }
+            ?>
+        </table>
+    </div>
 </div>
