@@ -689,4 +689,41 @@ protected function _call_soap($method, $params = array(), $retry = true)
         
         return $result;
     }
+	
+	
+	/**
+ * Проверяет наличие обязательных полей GUID в таблицах people и organization
+ * 
+ * @return array Массив ошибок (пустой, если всё в порядке)
+ */
+public function checkDatabaseStructure()
+{
+    $errors = array();
+    
+    $db = Database::instance('fb');
+    
+    // Проверка поля GUID в PEOPLE
+    $sql_people = "SELECT COUNT(*) FROM RDB\$RELATION_FIELDS 
+                   WHERE RDB\$RELATION_NAME = 'PEOPLE' 
+                   AND RDB\$FIELD_NAME = 'GUID'";
+    $count_people = DB::query(Database::SELECT, $sql_people)
+                     ->execute($db)
+                     ->get('COUNT');
+    if ((int)$count_people === 0) {
+        $errors[] = 'В таблице PEOPLE отсутствует поле GUID.';
+    }
+    
+    // Проверка поля GUID в ORGANIZATION
+    $sql_org = "SELECT COUNT(*) FROM RDB\$RELATION_FIELDS 
+                WHERE RDB\$RELATION_NAME = 'ORGANIZATION' 
+                AND RDB\$FIELD_NAME = 'GUID'";
+    $count_org = DB::query(Database::SELECT, $sql_org)
+                  ->execute($db)
+                  ->get('COUNT');
+    if ((int)$count_org === 0) {
+        $errors[] = 'В таблице ORGANIZATION отсутствует поле GUID.';
+    }
+    
+    return $errors;
+}
 }

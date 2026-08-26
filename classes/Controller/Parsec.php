@@ -4,10 +4,28 @@ class Controller_Parsec extends Controller_Template {
 	
 	
 	public $template = 'template';
+	
+	 protected $_db_structure_error = null;
+	 
+	 
 	public function before()
 	{
 			
 			parent::before();
+			
+			 // === ПРОВЕРКА СТРУКТУРЫ БД ===
+        $cch_model = new Model_Cch();
+        $db_errors = $cch_model->checkDatabaseStructure();
+        if (!empty($db_errors)) {
+            // Сохраняем ошибку в сессии
+            Session::instance()->set('db_error', implode(' ', $db_errors));
+            // Редирект на страницу ошибки
+            $this->redirect('parsec/error_page');
+            return;
+        }
+        // ==============================
+		
+		
 			$session = Session::instance();
 			//echo Debug::vars('9', $_POST, $_GET);
 			I18n::load('parsec');

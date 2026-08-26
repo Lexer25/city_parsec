@@ -12,6 +12,18 @@ class Controller_Cch extends Controller_Template {
     public function before()
     {
         parent::before();
+		
+		// === ПРОВЕРКА СТРУКТУРЫ БД ===
+        $this->_cch_model = new Model_Cch();
+        $db_errors = $this->_cch_model->checkDatabaseStructure();
+        if (!empty($db_errors)) {
+            $this->_db_structure_error = implode(' ', $db_errors);
+            $this->template->content = View::factory('error_page')
+                ->set('message', $this->_db_structure_error);
+            return false; // останавливаем выполнение action
+        }
+		
+		
         
         $this->_cch_model = new Model_Cch();
         $status = $this->_cch_model->getConnectionStatus();
