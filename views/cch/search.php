@@ -1,16 +1,13 @@
+
+
+ 
  <?php
 // ===== ШАПКА В САМОМ НАЧАЛЕ =====
 echo View::factory('parsec/_nav');
 // ===== КОНЕЦ ШАПКИ =====
- if(isset($result)){
-	 echo Debug::vars('5', $result);
-	
- } else {
-	 
-	 echo 'No result set';
- }
+
  
- 
+
  
  if(isset($guid_pep)){
 	 
@@ -55,6 +52,47 @@ echo View::factory('parsec/_nav');
  
  ?>
  
+ <!-- БЛОК СОДЕРЖИМОЕ ОТВЕТА -->
+
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        <h3 class="panel-title"><?php echo __('Результат выполнения команды');?></h3>
+    </div>
+    <div class="panel-body">
+        <p><?php echo __('Получить справку по командам SOAP PARSEC');?></p>
+  	<a href="http://127.0.0.1:10101/IntegrationService/IntegrationService.asmx?">http://127.0.0.1:10101/IntegrationService/IntegrationService.asmx?wsdl</a>
+	
+<?php
+       
+        
+        if (isset($result)) {
+       // echo Debug::vars('14', $result);//exit;
+          ?>  
+            <div style="position: relative;">
+                <button onclick="copyToClipboard()" style="position: absolute; top: 5px; right: 5px; z-index: 10; padding: 5px 10px; background: #337ab7; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                    Копировать
+                </button>
+                <pre id="config-content" style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: monospace; font-size: 12px; max-height: 500px; margin-top: 10px;"><?php echo Debug::vars($result); ?></pre>
+            </div>
+            
+            <script>
+            function copyToClipboard() {
+                var pre = document.getElementById('config-content');
+                var range = document.createRange();
+                range.selectNode(pre);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+                alert('Ответ скопирован в буфер обмена');
+            }
+            </script>
+            
+        <?php } else { ?>
+            <div class="alert alert-danger">Ответа нет или он пустой</div>
+        <?php } ?>
+    </div>
+</div>
  <div class="panel panel-primary col-md-10 col-md-offset-1">
   <div class="panel-heading row">
     <h3 class="panel-title ">GetObjectName Определение типа сущности по GUID (21.03.2026)</h3>

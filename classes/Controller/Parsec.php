@@ -9,32 +9,40 @@ class Controller_Parsec extends Controller_Template {
 	 
 	 
 	public function before()
-	{
-			
-			parent::before();
-			
-			 // === ПРОВЕРКА СТРУКТУРЫ БД ===
+    {
+        parent::before();
+        
+        // === ПРОВЕРКА СТРУКТУРЫ БД ===
         $cch_model = new Model_Cch();
         $db_errors = $cch_model->checkDatabaseStructure();
         if (!empty($db_errors)) {
-            // Сохраняем ошибку в сессии
+            // Если мы уже на странице ошибки - просто показываем её
+            if ($this->request->action() === 'error') {
+                return;
+            }
+            // Иначе - сохраняем ошибку и редиректим
             Session::instance()->set('db_error', implode(' ', $db_errors));
-            // Редирект на страницу ошибки
-            $this->redirect('parsec/error_page');
+            $this->redirect('parsec/error');
             return;
         }
         // ==============================
-		
-		
-			$session = Session::instance();
-			//echo Debug::vars('9', $_POST, $_GET);
-			I18n::load('parsec');
-			    // Проверяем, существует ли метод set_full_width
-			if (method_exists($this, 'set_full_width')) {
-				$this->set_full_width(false);
-			}
-	}
-
+        
+        $session = Session::instance();
+        I18n::load('parsec');
+        if (method_exists($this, 'set_full_width')) {
+            $this->set_full_width(false);
+        }
+    }
+    
+    /**
+     * Экшен для отображения ошибки структуры БД
+     */
+    public function action_error()
+    {
+        $error = Session::instance()->get('db_error', 'Ошибка структуры базы данных');
+        $content = View::factory('parsec_error_page')->set('message', $error);
+        $this->template->content = $content;
+    }
 	
 	/** 23.11.2025 обнуляется attempt для указанного id_cardindev
 	*/

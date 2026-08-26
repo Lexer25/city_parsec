@@ -13,15 +13,20 @@ class Controller_Cch extends Controller_Template {
     {
         parent::before();
 		
-		// === ПРОВЕРКА СТРУКТУРЫ БД ===
-        $this->_cch_model = new Model_Cch();
-        $db_errors = $this->_cch_model->checkDatabaseStructure();
+		 // === ПРОВЕРКА СТРУКТУРЫ БД ===
+        $cch_model = new Model_Cch();
+        $db_errors = $cch_model->checkDatabaseStructure();
         if (!empty($db_errors)) {
-            $this->_db_structure_error = implode(' ', $db_errors);
-            $this->template->content = View::factory('error_page')
-                ->set('message', $this->_db_structure_error);
-            return false; // останавливаем выполнение action
+            // Если мы уже на странице ошибки - просто показываем её
+            if ($this->request->action() === 'error') {
+                return;
+            }
+            // Иначе - сохраняем ошибку и редиректим
+            Session::instance()->set('db_error', implode(' ', $db_errors));
+            $this->redirect('parsec/error');
+            return;
         }
+        // ==============================
 		
 		
         
