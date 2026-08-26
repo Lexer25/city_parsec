@@ -221,74 +221,124 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
 </div>
 
 <!-- БЛОК КАТЕГОРИЙ ДОСТУПА-->
-
-<!-- БЛОК КАТЕГОРИЙ ДОСТУПА-->
 <div class="panel panel-primary">
     <div class="panel-heading">
-        <h3 class="panel-title"><?php echo __('info')?></h3>
+        <h3 class="panel-title"><?php echo __('Категории доступа'); ?></h3>
     </div>
     <div class="panel-body">
-        <table class='table table-striped'>
-            <tr>
-                <th><?php echo __('№ п/п')?></th>
-                <th><?php echo __('GUID')?></th>
-                <th><?php echo __('NAME_in_PARSEC')?></th>
-                <th><?php echo __('IDENTIFTYPE')?></th>
-                <th><?php echo __('NAME_in_ARTONIT')?></th>
-                <th><?php echo __('ToDo')?></th>
-            </tr>
-            <?php 
-            if (is_string($GetAccessGroups)) {
-                echo '<tr><td colspan="6">' . htmlspecialchars($GetAccessGroups) . '</td></tr>';
-            } elseif (is_object($GetAccessGroups) && property_exists($GetAccessGroups, 'GetAccessGroupsResult')) {
-                foreach ($GetAccessGroups->GetAccessGroupsResult as $var) {
-                    $ii=0;
-                    ?>
-                    <tr>
-                        <th colspan="6">Группа <?php echo ++$ii; ?></th>
-                    </tr>
-                    <?php foreach ($var as $list) { ?>
-                        <tr>
-                            <td><?php echo $ii;?></td>
-                            <td><?php echo $list->ID;?></td>
-                            <td><?php echo htmlspecialchars($list->NAME);?></td>
-                            <td><?php echo $list->IDENTIFTYPE;?></td>
-                            <td>
-                                <?php 
-                                $artonitName = Arr::get(Arr::get($getAccessArtonit, $list->ID), 'name');
-                                echo $artonitName ? iconv('windows-1251', 'UTF-8', $artonitName) : '—';
-                                ?>
-                            </td>
-                            <td>
-                                <?php 
-                                if ($getAccessArtonit && array_key_exists($list->ID, $getAccessArtonit)) {
-                                    // Категория уже есть в Артонит
-                                    ?>
-                                    <?php echo Form::open(); ?>
-                                    <?php echo Form::hidden('guid', $list->ID); ?>
-                                    <?php echo Form::hidden('name', $list->NAME); ?>
-                                    <?php echo Form::submit('updateName', __('Обновить название'), array('class' => 'btn btn-warning btn-sm')); ?>
-                                    <?php echo Form::close(); ?>
-                                    <?php
-                                } else {
-                                    // Категории нет в Артонит
-                                    ?>
-                                    <?php echo Form::open(); ?>
-                                    <?php echo Form::hidden('guid', $list->ID); ?>
-                                    <?php echo Form::hidden('name', $list->NAME); ?>
-                                    <?php echo Form::submit('addAccessName', __('Добавить в Артонит'), array('class' => 'btn btn-success btn-sm')); ?>
-                                    <?php echo Form::close(); ?>
-                                    <?php
+        <?php 
+        if (is_string($GetAccessGroups)) {
+            echo '<div class="alert alert-warning">' . htmlspecialchars($GetAccessGroups) . '</div>';
+        } elseif (is_object($GetAccessGroups) && property_exists($GetAccessGroups, 'GetAccessGroupsResult')) {
+            foreach ($GetAccessGroups->GetAccessGroupsResult as $group_index => $var) {
+                ?>
+                <h4>Группа <?php echo $group_index + 1; ?></h4>
+                <div class="table-responsive">
+                    <table class='table table-striped table-bordered table-hover'>
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>GUID</th>
+                                <th>Название в Parsec</th>
+                                <th>Тип идентификаторов</th>
+                                <th>Название в Артонит</th>
+                                <th>Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            $ii = 0;
+                            foreach ($var as $list) { 
+                                $ii++;
+                                $guid = $list->ID;
+                                $name_parsec = $list->NAME;
+                                $identifype = $list->IDENTIFTYPE;
+                                
+                                // Получаем название из Артонит
+                                $artonit_data = Arr::get($getAccessArtonit, $guid);
+                                $name_artonit = $artonit_data ? iconv('windows-1251', 'UTF-8', $artonit_data['name']) : null;
+                                $exists_in_artonit = $artonit_data && !empty($name_artonit);
+                                
+                                // Сравниваем названия (с учётом кодировки)
+                                $names_match = false;
+                                if ($exists_in_artonit) {
+                                    $name_parsec_compare = iconv('UTF-8', 'windows-1251', $name_parsec);
+                                    $name_artonit_compare = $artonit_data['name'];
+                                    $names_match = ($name_parsec_compare === $name_artonit_compare);
                                 }
                                 ?>
-                            </td>
-                        </tr>
-                    <?php } ?>
-                <?php }
-            } else {
-                echo '<tr><td colspan="6">Нет данных или ошибка</td></tr>';
+                                <tr>
+                                    <td><?php echo $ii; ?></td>
+                                    <td><code><?php echo $guid; ?></code></td>
+                                    <td><?php echo htmlspecialchars($name_parsec); ?></td>
+                                    <td>
+                                        <?php 
+                                        $type_labels = array(
+                                            1 => 'Карта',
+                                            2 => 'Код доступа',
+                                            3 => 'Биометрия'
+                                        );
+                                        echo isset($type_labels[$identifype]) ? $type_labels[$identifype] : $identifype;
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        if ($exists_in_artonit) {
+                                            echo '<span class="label label-success">' . htmlspecialchars($name_artonit) . '</span>';
+                                        } else {
+                                            echo '<span class="label label-default">—</span>';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        // Логика кнопок:
+                                        // 1. Если категории нет в Артонит → активна только "Добавить"
+                                        // 2. Если категория есть, но названия разные → активна только "Обновить"
+                                        // 3. Если категория есть и названия совпадают → обе неактивны
+                                        
+                                        if (!$exists_in_artonit) {
+                                            // Кнопка "Добавить" активна
+                                            echo Form::open();
+                                            echo Form::hidden('guid', $guid);
+                                            echo Form::hidden('name', $name_parsec);
+                                            echo Form::submit('addAccessName', __('Добавить в Артонит'), array(
+                                                'class' => 'btn btn-success btn-sm'
+                                            ));
+                                            echo Form::close();
+                                            
+                                            // Кнопка "Обновить" неактивна
+                                            echo '<button class="btn btn-warning btn-sm" disabled>Обновить</button>';
+                                        } elseif ($exists_in_artonit && !$names_match) {
+                                            // Кнопка "Добавить" неактивна
+                                            echo '<button class="btn btn-success btn-sm" disabled>Добавить в Артонит</button>';
+                                            
+                                            // Кнопка "Обновить" активна
+                                            echo Form::open();
+                                            echo Form::hidden('guid', $guid);
+                                            echo Form::hidden('name', $name_parsec);
+                                            echo Form::submit('updateName', __('Обновить название'), array(
+                                                'class' => 'btn btn-warning btn-sm'
+                                            ));
+                                            echo Form::close();
+                                        } else {
+                                            // Обе кнопки неактивны
+                                            echo '<button class="btn btn-success btn-sm" disabled>Добавить в Артонит</button>';
+                                            echo '<button class="btn btn-warning btn-sm" disabled>Обновить</button>';
+                                            echo ' <span class="label label-info">Совпадает</span>';
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php 
             }
-            ?>
-        </table>
+        } else {
+            echo '<div class="alert alert-info">Нет данных о категориях доступа</div>';
+        }
+        ?>
     </div>
 </div>
