@@ -284,9 +284,10 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
                                     <td>
                                         <?php 
                                         if ($exists_in_artonit) {
-                                            echo '<span class="label label-success">' . htmlspecialchars($name_artonit) . '</span>';
+                                            //echo '<span class="label label-success">' . htmlspecialchars($name_artonit) . '</span>';
+                                            echo htmlspecialchars($name_artonit);
                                         } else {
-                                            echo '<span class="label label-default">—</span>';
+                                            echo '<span class="label label-alarm">—</span>';
                                         }
                                         ?>
                                     </td>
