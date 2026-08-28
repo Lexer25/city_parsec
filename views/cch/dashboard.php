@@ -240,7 +240,7 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
                                 <th>№</th>
                                 <th>GUID</th>
                                 <th>Название в Parsec</th>
-                                <th>Тип идентификаторов</th>
+                               
                                 <th>Название в Артонит</th>
                                 <th>Действие</th>
                             </tr>
@@ -271,23 +271,14 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
                                     <td><?php echo $ii; ?></td>
                                     <td><code><?php echo $guid; ?></code></td>
                                     <td><?php echo htmlspecialchars($name_parsec); ?></td>
-                                    <td>
-                                        <?php 
-                                        $type_labels = array(
-                                            1 => 'Карта',
-                                            2 => 'Код доступа',
-                                            3 => 'Биометрия'
-                                        );
-                                        echo isset($type_labels[$identifype]) ? $type_labels[$identifype] : $identifype;
-                                        ?>
-                                    </td>
+                                  
                                     <td>
                                         <?php 
                                         if ($exists_in_artonit) {
                                             //echo '<span class="label label-success">' . htmlspecialchars($name_artonit) . '</span>';
                                             echo htmlspecialchars($name_artonit);
                                         } else {
-                                            echo '<span class="label label-alarm">—</span>';
+                                            echo '<span class="label label-default">—</span>';
                                         }
                                         ?>
                                     </td>
@@ -318,14 +309,14 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
                                             echo Form::open();
                                             echo Form::hidden('guid', $guid);
                                             echo Form::hidden('name', $name_parsec);
-                                            echo Form::submit('updateName', __('Обновить название'), array(
+                                            echo Form::submit('updateName', __('Обновить название из Парсек в Артонит'), array(
                                                 'class' => 'btn btn-warning btn-sm'
                                             ));
                                             echo Form::close();
                                         } else {
                                             // Обе кнопки неактивны
                                             echo '<button class="btn btn-success btn-sm" disabled>Добавить в Артонит</button>';
-                                            echo '<button class="btn btn-warning btn-sm" disabled>Обновить</button>';
+                                            echo '<button class="btn btn-warning btn-sm" disabled>Обновить название из Парсек в Артонит</button>';
                                             echo ' <span class="label label-info">Совпадает</span>';
                                         }
                                         ?>
