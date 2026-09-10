@@ -392,6 +392,7 @@ public function _mainView()
         if (!$this->_checkSession()) return;
         
         $addOrg = isset($_POST['addOrg']) ? true : false;
+		
         $original_time_limit = ini_get('max_execution_time');
         set_time_limit(600);
        
@@ -400,13 +401,15 @@ public function _mainView()
         $timestart = microtime(true);
         $resultList['orgcount'] = count($orgList);
         
-        foreach (array_slice($orgList, 0, 10) as $value) {
+        //foreach (array_slice($orgList, 0, 10) as $value) {
+        foreach ($orgList as $value) {
             $guid = Arr::get($value, 'GUID');
             $orgUnit = $this->_cch_model->GetOrgUnit($this->_session_id, $guid);
             $orgUnitArray = (array) $orgUnit;
             if (empty($orgUnitArray)) {
                 $resultList['org_not_in_parsec'][] = $guid;
                 if ($addOrg) {
+					
                     $this->_addOrgListTask($guid);
                 }
             }
@@ -428,22 +431,25 @@ public function _mainView()
         if (!$this->_checkSession()) return;
         
         $addPep = isset($_POST['addPeople']) ? true : false;
+
         $original_time_limit = ini_get('max_execution_time');
-        set_time_limit(600);
+        set_time_limit(0);
        
         $orgList = $this->_getPeopleList();
         $resultList = array();
         $timestart = microtime(true);
         $resultList['pepcount'] = count($orgList);
         
-        foreach (array_slice($orgList, 4000, 1000) as $value) {
+        foreach ($orgList as $value) {
             $guid = Arr::get($value, 'GUID');
+            $id_pep = Arr::get($value, 'ID_PEP');
             $orgUnit = $this->_cch_model->GetPerson($this->_session_id, $guid);
             $orgUnitArray = (array) $orgUnit;
             if (empty($orgUnitArray)) {
                 $resultList['person_not_in_parsec'][] = $guid;
                 if ($addPep) {
-                 ///   $this->_addPepistTask($guid);
+					
+                    $this->_addPepListTask($id_pep);
                 }
             }
         }
@@ -490,7 +496,7 @@ public function _mainView()
     
     protected function _getOrgList()
     {
-        $sql = 'select o.guid from organization o';
+        $sql = 'select o.guid from organization o where o.id_org>3';
         return DB::query(Database::SELECT, $sql)
             ->execute(Database::instance('fb'))
             ->as_array();
@@ -498,8 +504,9 @@ public function _mainView()
     
     protected function _getPeopleList()
     {
-        $sql = 'select p.guid from people p
+        $sql = 'select p.id_pep, p.guid from people p
 			where p.guid is not null
+			and p.id_pep>1
 			';
         return DB::query(Database::SELECT, $sql)
             ->execute(Database::instance('fb'))
@@ -524,18 +531,37 @@ public function _mainView()
             ->execute(Database::instance('fb'));
     }
     
-    protected function _addOrgListTask($guid)
+    protected function _addPepListTask($id_pep)
+    {
+        $sql = 'INSERT INTO CARDINDEV (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (1,NULL,NULL,NULL,3, 0, '.$id_pep.');';
+	//echo Debug::vars('535', $sql); exit;	
+	   try {
+            DB::query(Database::INSERT, $sql)
+                
+                ->execute(Database::instance('fb'));
+        } catch (Exception $e) {
+            // логирование ошибки
+        }
+		
+    }
+	
+	
+	protected function _addOrgListTask($guid)
     {
         $sql = 'INSERT INTO CARDINDEV (ID_DB, ID_CARD, DEVIDX, ID_DEV, OPERATION, ATTEMPTS, ID_PEP)
-                VALUES (1, :guid, NULL, NULL, 5, 0, 1)';
-        try {
+                VALUES (1, \''.$guid.'\', NULL, NULL, 5, 0, 1)';
+		
+	   try {
             DB::query(Database::INSERT, $sql)
-                ->param(':guid', $guid)
+                
                 ->execute(Database::instance('fb'));
         } catch (Exception $e) {
             // логирование ошибки
         }
     }
+	
+	
+	
     
     protected function _getAccessArtonit()
     {

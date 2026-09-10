@@ -1,5 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-defined('PARSEC_VERSION') OR define('PARSEC_VERSION', '2.0.7');
+defined('PARSEC_VERSION') OR define('PARSEC_VERSION', '2.0.8');
 
 
 Kohana::$config->load('menu')
@@ -19,7 +19,7 @@ Kohana::$config->load('menu')
                 'url' => 'cch'
             ),
 			'config' => array(
-                'title' => 'Конфигурация',
+                'title' => 'Отладка',
                 'url' => 'cch/search'
             )
 			

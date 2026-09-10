@@ -283,7 +283,7 @@ echo View::factory('parsec/_nav');
   </div>
   <form role="form" action="comparePeople" method="POST">
 	 <label>
-        <input type="checkbox" name="addOrg" value="1">Добавлять в задачи
+        <input type="checkbox" name="addPeople" value="1">Добавлять в задачи
       </label>
 <br>
 	<button type="submit" class="btn btn-default">Отправить</button>

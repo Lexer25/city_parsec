@@ -726,4 +726,31 @@ public function checkDatabaseStructure()
     
     return $errors;
 }
+
+ /**
+     * Получить информацию о подразделении (организации)
+     */
+    public function GetOrgUnit($session_id, $org_unit_id)
+    {
+        if (empty($session_id) || empty($org_unit_id)) {
+            return (object) array(
+                'error' => true,
+                'message' => 'Не указан ID сессии или ID организации'
+            );
+        }
+        
+        $result = $this->_call_soap('GetOrgUnit', array(
+            'sessionID' => $session_id,
+            'orgUnitID' => $org_unit_id
+        ));
+        
+        if ($result === false) {
+            return (object) array(
+                'error' => true,
+                'message' => 'Не удалось найти организацию с ID: ' . $org_unit_id
+            );
+        }
+        
+        return $result;
+    }
 }
