@@ -18,7 +18,7 @@ $current_action = Request::current()->action();
             </li>
             <li role="presentation" class="<?php echo ($current_uri == 'cch/search') ? 'active' : ''; ?>">
                 <a href="<?php echo URL::site('cch/search'); ?>">
-                    <span class="glyphicon glyphicon-search"></span> Поиск / Конфигурация
+                    <span class="glyphicon glyphicon-search"></span> Отладка
                 </a>
             </li>
         </ul>

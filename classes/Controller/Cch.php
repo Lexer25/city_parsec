@@ -13,6 +13,8 @@ class Controller_Cch extends Controller_Template {
     {
         parent::before();
 		
+		
+		
 		 // === ПРОВЕРКА СТРУКТУРЫ БД ===
         $cch_model = new Model_Cch();
         $db_errors = $cch_model->checkDatabaseStructure();
@@ -32,6 +34,7 @@ class Controller_Cch extends Controller_Template {
         
         $this->_cch_model = new Model_Cch();
         $status = $this->_cch_model->getConnectionStatus();
+		View::set_global('mock_mode', $this->_cch_model->isMockMode());
 
         if ($status->error) {
             // Сервер недоступен
@@ -235,6 +238,7 @@ public function _mainView()
     } else {
         $session_status = 'Сессия не открыта';
     }
+	
     
     $content = View::factory('cch/dashboard', array(
         'version' => $version,
@@ -771,5 +775,11 @@ public function _mainView()
 			}
 		}
 
+
+	protected function _getMockMode()
+	{
+		$soap_config = (array) Kohana::$config->load('soap.parsec');
+		return isset($soap_config['mock_mode']) && $soap_config['mock_mode'] === true;
+	}
 
 } // End cch

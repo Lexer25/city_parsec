@@ -176,7 +176,8 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
 
 <div class="panel panel-primary">
     <div class="panel-heading">
-        <h3 class="panel-title"><?php echo __('connectionString');?></h3>
+        <h3 class="panel-title"><?php echo __('Содержимое файла soap.php'); ?></h3>
+		<p><?php echo __('Исходный текст конфигурационного файла для проверки.'); ?></p>
     </div>
     <div class="panel-body">
         <p><?php echo __('connectionStringDescription');?></p>
@@ -252,7 +253,7 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
                                 $ii++;
                                 $guid = $list->ID;
                                 $name_parsec = $list->NAME;
-                                $identifype = $list->IDENTIFTYPE;
+                               
                                 
                                 // Получаем название из Артонит
                                 $artonit_data = Arr::get($getAccessArtonit, $guid);
@@ -262,7 +263,8 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
                                 // Сравниваем названия (с учётом кодировки)
                                 $names_match = false;
                                 if ($exists_in_artonit) {
-                                    $name_parsec_compare = iconv('UTF-8', 'windows-1251', $name_parsec);
+                                    $name_parsec_compare = @iconv('UTF-8', 'windows-1251//IGNORE', $name_parsec);
+if ($name_parsec_compare === false) { $name_parsec_compare = $name_parsec; }
                                     $name_artonit_compare = $artonit_data['name'];
                                     $names_match = ($name_parsec_compare === $name_artonit_compare);
                                 }
@@ -291,7 +293,7 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
                                         
                                         if (!$exists_in_artonit) {
                                             // Кнопка "Добавить" активна
-                                            echo Form::open();
+                                            echo Form::open('cch');
                                             echo Form::hidden('guid', $guid);
                                             echo Form::hidden('name', $name_parsec);
                                             echo Form::submit('addAccessName', __('Добавить в Артонит'), array(
@@ -306,7 +308,7 @@ $mock_mode = isset($soapConfig['mock_mode']) && $soapConfig['mock_mode'] === tru
                                             echo '<button class="btn btn-success btn-sm" disabled>Добавить в Артонит</button>';
                                             
                                             // Кнопка "Обновить" активна
-                                            echo Form::open();
+                                            echo Form::open('cch');
                                             echo Form::hidden('guid', $guid);
                                             echo Form::hidden('name', $name_parsec);
                                             echo Form::submit('updateName', __('Обновить название из Парсек в Артонит'), array(

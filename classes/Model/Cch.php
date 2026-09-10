@@ -138,7 +138,7 @@ protected function _init_soap_client()
     // === КОНЕЦ MOCK ===
     
     // Оригинальный код для реального режима
-    if (!$this->checkConnection()) {
+    if (!$this->_ConnectionState()) {
         Kohana::$log->add(Log::ERROR, 'SOAP клиент не инициализирован: сервер недоступен');
         return false;
     }
@@ -193,7 +193,7 @@ protected function _call_soap($method, $params = array(), $retry = true)
     
     // В реальном режиме — проверяем соединение
     if (!$mock_mode) {
-        if (!$this->checkConnection()) {
+        if (!$this->_ConnectionState()) {
             return (object) array(
                 'error' => true,
                 'message' => 'Сервер Parsec недоступен. Проверьте сетевое соединение. (таймаут ' . $this->_connection_timeout . ' сек)'
@@ -263,7 +263,7 @@ protected function _call_soap($method, $params = array(), $retry = true)
     // === КОНЕЦ ДОБАВЛЕНИЯ ===
 	
 		$start_time = microtime(true);
-        $is_available = $this->checkConnection();
+        $is_available = $this->_ConnectionState();
         $response_time = round((microtime(true) - $start_time) * 1000);
         
         if ($is_available) {
@@ -753,4 +753,15 @@ public function checkDatabaseStructure()
         
         return $result;
     }
+	
+	/**
+ * Проверить, включён ли mock-режим
+ * 
+ * @return bool
+ */
+public function isMockMode()
+{
+    return isset($this->_soap_config['mock_mode']) 
+        && $this->_soap_config['mock_mode'] === true;
+}
 }

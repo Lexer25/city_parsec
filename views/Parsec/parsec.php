@@ -1,4 +1,6 @@
 <?php echo View::factory('parsec/_nav'); ?>
+<?php echo View::factory('parsec/_mock_alert')->set('mock_mode', $mock_mode); ?>
+
 <!-- ФОРМА ДЛЯ ОТОБРАЖЕНИЯ СОДЕРЖИМОГО STATE.TXT -->
 <div class="panel panel-info" style="margin-bottom: 20px;">
     <div class="panel-heading">

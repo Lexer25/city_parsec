@@ -6,8 +6,8 @@
 echo View::factory('parsec/_nav');
 // ===== КОНЕЦ ШАПКИ =====
 
- 
 
+echo View::factory('parsec/_mock_alert');
  
  if(isset($guid_pep)){
 	 

@@ -139,25 +139,28 @@ class Controller_Parsec extends Controller_Template {
         $this->template->content = $content;
 		
 	}
-	//==================== 31.03.2026
-	public function action_index()
-	{
-		$_SESSION['menu_active'] = 'parsec';
-		
-		$task_list = Model::Factory('parsec')->get_task_list();
-		
-		
-		
-		// Получение состояния из файла state.txt
-		$service_state = $this->get_service_state();
-		
-		$content = View::factory('parsec/parsec', array(
-			'task_list'     => $task_list,
-			'service_state' => $service_state, // Добавляем состояние в view
-			
-		));
-		$this->template->content = $content;
-	}
+
+public function action_index()
+{
+    $_SESSION['menu_active'] = 'parsec';
+    
+    $task_list = Model::Factory('parsec')->get_task_list();
+    
+    // Получение состояния из файла state.txt
+    $service_state = $this->get_service_state();
+    
+    // === ДОБАВИТЬ: получаем признак mock-режима ===
+    $soap_config = (array) Kohana::$config->load('soap.parsec');
+    $mock_mode = isset($soap_config['mock_mode']) && $soap_config['mock_mode'] === true;
+    // =============================================
+    
+    $content = View::factory('parsec/parsec', array(
+        'task_list'     => $task_list,
+        'service_state' => $service_state,
+        'mock_mode'     => $mock_mode,   // ← передаём во view
+    ));
+    $this->template->content = $content;
+}
 
 	/**
 	 * Получить текущее состояние сервиса из файла state.txt
