@@ -1,5 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-defined('PARSEC_VERSION') OR define('PARSEC_VERSION', '2.0.9');
+defined('PARSEC_VERSION') OR define('PARSEC_VERSION', '2.0.10');
 
 
 Kohana::$config->load('menu')

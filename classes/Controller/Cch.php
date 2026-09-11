@@ -389,43 +389,112 @@ public function _mainView()
     }
     
     /**
-     * Сравнение организаций в БД СКУД и в БД Парсек.
-     */
-    public function action_compareOrg()
-    {
-        if (!$this->_checkSession()) return;
-        
-        $addOrg = isset($_POST['addOrg']) ? true : false;
-		
-        $original_time_limit = ini_get('max_execution_time');
-        set_time_limit(600);
-       
+ * Сравнение организаций в БД СКУД Артонит и в БД Parsec.
+ *
+ * Результат:
+ *   orgcount                — всего организаций проверено
+ *   org_in_parsec           — массив GUID, найденных в Parsec
+ *   org_not_in_parsec       — массив GUID, отсутствующих в Parsec (можно создавать задачи)
+ *   org_check_error         — массив ['guid' => ..., 'message' => ...] по ошибкам связи/запроса
+ *   timeexcute              — время выполнения, сек
+ */
+public function action_compareOrg()
+{
+    if (!$this->_checkSession()) {
+        return;
+    }
+
+    $addOrg = !empty($_POST['addOrg']);
+
+    $original_time_limit = ini_get('max_execution_time');
+    set_time_limit(600);
+
+    $resultList = array(
+        'orgcount'          => 0,
+        'org_in_parsec'     => array(),
+        'org_not_in_parsec' => array(),
+        'org_check_error'   => array(),
+        'timeexcute'        => 0,
+    );
+
+    $timestart = microtime(true);
+
+    try {
         $orgList = $this->_getOrgList();
-        $resultList = array();
-        $timestart = microtime(true);
         $resultList['orgcount'] = count($orgList);
-        
-        //foreach (array_slice($orgList, 0, 10) as $value) {
+
         foreach ($orgList as $value) {
-            $guid = Arr::get($value, 'GUID');
-            $orgUnit = $this->_cch_model->GetOrgUnit($this->_session_id, $guid);
-            $orgUnitArray = (array) $orgUnit;
-            if (empty($orgUnitArray)) {
+            $guid_raw = Arr::get($value, 'GUID');
+
+            // Нормализация GUID перед отправкой в Parsec
+            $guid = strtoupper(trim((string) $guid_raw));
+
+            if ($guid === '') {
+                // Пустые GUID не отправляем в Parsec, но фиксируем отдельно
+                $resultList['org_check_error'][] = array(
+                    'guid'    => $guid_raw,
+                    'message' => 'Пустой GUID в БД Артонит',
+                );
+                continue;
+            }
+
+            $response = $this->_cch_model->GetOrgUnit($this->_session_id, $guid);
+
+            // 1) Ошибка связи/запроса — не считаем «нет в Parsec» и не ставим задачу
+            if (isset($response->error) && $response->error) {
+                $message = isset($response->message)
+                    ? $response->message
+                    : 'Неизвестная ошибка SOAP';
+
+                $resultList['org_check_error'][] = array(
+                    'guid'    => $guid,
+                    'message' => $message,
+                );
+
+                Kohana::$log->add(
+                    Log::ERROR,
+                    'compareOrg: ошибка GetOrgUnit для GUID ' . $guid . ': ' . $message
+                );
+
+                continue;
+            }
+
+            // 2) Разбираем ответ SOAP
+            $org = isset($response->GetOrgUnitResult)
+                ? $response->GetOrgUnitResult
+                : null;
+
+            if ($org === null) {
+                // Организации действительно нет в Parsec
                 $resultList['org_not_in_parsec'][] = $guid;
+
                 if ($addOrg) {
-					
                     $this->_addOrgListTask($guid);
                 }
+            } else {
+                // Организация есть в Parsec
+                $resultList['org_in_parsec'][] = $guid;
+
+                // Опционально: здесь можно сравнить NAME / PARENT_ID
+                // и при расхождении поставить задачу 55 (изменение организации).
+                // Пример — см. блок «Сравнение полей» ниже.
             }
         }
-        
-        $resultList['timeexcute'] = (microtime(true) - $timestart);
-        set_time_limit($original_time_limit);
-        
-        $content = View::factory('cch/search')->set('result', $resultList);
-        $content = $this->_addErrorAlert($content);
-        $this->template->content = $content;
+    } catch (Exception $e) {
+        Kohana::$log->add(
+            Log::ERROR,
+            'compareOrg: непредвиденная ошибка: ' . $e->getMessage()
+        );
     }
+
+    $resultList['timeexcute'] = microtime(true) - $timestart;
+
+    set_time_limit($original_time_limit);
+
+    $content = View::factory('cch/search')->set('result', $resultList);
+    $content = $this->_addErrorAlert($content);
+    $this->template->content = $content;
+}
     
     /**
      * Сравнение пиплов в БД СКУД и в БД Парсек.
@@ -549,8 +618,37 @@ public function _mainView()
 		
     }
 	
-	
+	/**
+	 * Ставит задачу интегратору на добавление организации.
+	 *
+	 * @param string $guid GUID организации (уже нормализованный)
+	 * @return bool true — задача создана, false — ошибка
+	 */
 	protected function _addOrgListTask($guid)
+	{
+		$sql = 'INSERT INTO CARDINDEV (ID_DB, ID_CARD, DEVIDX, ID_DEV, OPERATION, ATTEMPTS, ID_PEP)
+				VALUES (1, :guid, NULL, NULL, 5, 0, 1)';
+		$sql = 'INSERT INTO CARDINDEV (ID_DB, ID_CARD, DEVIDX, ID_DEV, OPERATION, ATTEMPTS, ID_PEP)
+                VALUES (1, \''.$guid.'\', NULL, NULL, 5, 0, 1)';
+		try {
+			DB::query(Database::INSERT, $sql)
+		//		->param(':guid', $guid)
+				->execute(Database::instance('fb'));
+
+			return true;
+		} catch (Exception $e) {
+			Kohana::$log->add(
+				Log::ERROR,
+				'compareOrg: не удалось создать задачу для организации ' . $guid
+				. ': ' . $e->getMessage()
+			);
+
+			return false;
+		}
+	}
+
+	
+	protected function _addOrgListTask_($guid)
     {
         $sql = 'INSERT INTO CARDINDEV (ID_DB, ID_CARD, DEVIDX, ID_DEV, OPERATION, ATTEMPTS, ID_PEP)
                 VALUES (1, \''.$guid.'\', NULL, NULL, 5, 0, 1)';

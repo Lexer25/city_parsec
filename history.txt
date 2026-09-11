@@ -1,5 +1,8 @@
 history modules parsec
-
+вер. 2.0.10
+11.09.2026
+[*]
+Изменен метод action_compareOrg и _addOrgListTask
 Вер. 2.0.9
 10.09.2026
 [+]
