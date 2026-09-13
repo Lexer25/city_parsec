@@ -12,16 +12,19 @@
  *   5. По окончании выводим статистику.
  *
  * Запуск:
- *   c:\xampp\php\php.exe c:\xampp\htdocs\city\modules\minion\minion --task=parsec_sync_peope
+ *   c:\xampp\php\php.exe c:\xampp\htdocs\city\modules\minion\minion --task=parsecSyncPeope
  *
  * Опции:
- *   --add         1|0   Ставить задачи (по умолчанию 1)
+ *   --add         1|0   Ставить задачи (по умолчанию 0)
  *   --limit       N     Ограничить количество проверяемых персон (0 — без ограничений)
  *   --id_pep      N     Проверить только одну персону
  *   --verbose     1|0   Подробный вывод
  *
- * @version 1.0.0
- * @date    2026-09-12
+ * Формат лога — табличный, разделитель колонок "\t":
+ *   счётчик | статус | ФИО | Artonit | Parsec | примечание
+ *
+ * @version 1.2.0
+ * @date    2026-09-13
  */
 class Task_parsecSyncPeope extends Minion_Task
 {
@@ -41,6 +44,9 @@ class Task_parsecSyncPeope extends Minion_Task
 
     /** @var string */
     protected $_session_id = null;
+
+    /** @var array Кэш названий организаций Parsec: guid => name (уже в CP1251) */
+    protected $_org_name_cache = array();
 
     /** @var array */
     protected $_stats = array(
@@ -119,11 +125,23 @@ class Task_parsecSyncPeope extends Minion_Task
         Minion_CLI::write('Получено персон для проверки: ' . count($people));
         Minion_CLI::write('');
 
+        // --- 4.1. Шапка таблицы (только в verbose-режиме) ---
+        if ($verbose) {
+            Minion_CLI::write($this->_log_row(
+                'Счётчик',
+                'Статус',
+                'ФИО',
+                'Artonit',
+                'Parsec',
+                'Примечание'
+            ));
+            Minion_CLI::write(str_repeat('=', 160));
+        }
+
         // --- 5. Основной цикл ---
         $i = 0;
         foreach ($people as $row) {
             $i++;
-			//echo Debug::vars('126', $row, $add, $verbose, $i, count($people)); exit;
             $this->_check_person($row, $add, $verbose, $i, count($people));
         }
 
@@ -135,6 +153,52 @@ class Task_parsecSyncPeope extends Minion_Task
     // ---------------------------------------------------------------------
     // Вспомогательные методы
     // ---------------------------------------------------------------------
+
+    /**
+     * Формирует строку лога в табличном формате.
+     * Колонки: счётчик | статус | ФИО | Artonit | Parsec | примечание.
+     *
+     * @param string $prefix  [i/total] id_pep=N
+     * @param string $status  РАСХОЖДЕНИЕ | OK | НЕТ В PARSEC | ПРОПУЩЕН | ОШИБКА
+     * @param string $fio
+     * @param string $artonit
+     * @param string $parsec
+     * @param string $note
+     * @return string
+     */
+    protected function _log_row($prefix, $status, $fio = '', $artonit = '', $parsec = '', $note = '')
+    {
+        return $prefix  . "\t"
+             . $status  . "\t"
+             . $fio     . "\t"
+             . $artonit . "\t"
+             . $parsec  . "\t"
+             . $note;
+    }
+
+    /**
+     * Приводит строку из UTF-8 к CP1251 (для вывода в лог).
+     * Если строка не является валидным UTF-8 — возвращает её как есть.
+     *
+     * @param string $str
+     * @return string
+     */
+    protected function _utf8_to_cp1251($str)
+    {
+        $str = (string) $str;
+
+        if ($str === '') {
+            return '';
+        }
+
+        // Если строка НЕ валидный UTF-8 — считаем, что она уже в CP1251
+        if (function_exists('mb_check_encoding') && !mb_check_encoding($str, 'UTF-8')) {
+            return $str;
+        }
+
+        $converted = @iconv('UTF-8', 'CP1251//TRANSLIT//IGNORE', $str);
+        return ($converted === false) ? $str : $converted;
+    }
 
     /**
      * Открывает сессию Parsec.
@@ -188,7 +252,7 @@ class Task_parsecSyncPeope extends Minion_Task
      */
     protected function _get_people_list($id_pep = 0, $limit = 0)
     {
-        $sql = 'SELECT first 100 p.id_pep,
+        $sql = 'SELECT first 20 p.id_pep,
                        p.guid              AS pep_guid,
                        p.surname,
                        p.name,
@@ -199,7 +263,7 @@ class Task_parsecSyncPeope extends Minion_Task
                 FROM people p
                 LEFT JOIN organization o ON o.id_org = p.id_org
                 WHERE p.guid IS NOT NULL
-				and p.id_pep>1';
+                  AND p.id_pep > 1';
 
         if ($id_pep > 0) {
             $sql .= ' AND p.id_pep = ' . (int) $id_pep;
@@ -208,7 +272,7 @@ class Task_parsecSyncPeope extends Minion_Task
         $sql .= ' ORDER BY p.id_pep';
 
         if ($limit > 0) {
-            // Firebird: FIRST n
+            // Firebird: FIRST n — ставим сразу после SELECT
             $sql = preg_replace('/^SELECT /', 'SELECT FIRST ' . (int) $limit . ' ', $sql);
         }
 
@@ -233,9 +297,7 @@ class Task_parsecSyncPeope extends Minion_Task
      */
     protected function _check_person(array $row, $add, $verbose, $i, $total)
     {
-      // echo Debug::vars('235', $row); //exit;
-		
-		$id_pep    = Arr::get($row, 'ID_PEP');
+        $id_pep    = Arr::get($row, 'ID_PEP');
         $pep_guid  = strtoupper(trim((string) Arr::get($row, 'PEP_GUID')));
         $org_guid  = strtoupper(trim((string) Arr::get($row, 'ORG_GUID')));
         $fio       = trim(
@@ -244,9 +306,9 @@ class Task_parsecSyncPeope extends Minion_Task
             Arr::get($row, 'PATRONYMIC')
         );
 
-        // Кодировка из Firebird WIN1251 -> UTF-8
-        $fio = $this->_to_utf8($fio);
-        $org_name = $this->_to_utf8((string) Arr::get($row, 'ORG_NAME'));
+        // Firebird отдаёт WIN1251, файл .php в CP1251, лог в CP1251.
+        // Никаких перекодировок не требуется.
+        $org_name = (string) Arr::get($row, 'ORG_NAME');
 
         $prefix = sprintf('[%d/%d] id_pep=%s', $i, $total, $id_pep);
 
@@ -254,15 +316,21 @@ class Task_parsecSyncPeope extends Minion_Task
         if ($pep_guid === '') {
             $this->_stats['skipped']++;
             if ($verbose) {
-                Minion_CLI::write($prefix . ' — ПРОПУЩЕН: пустой GUID персоны');
+                Minion_CLI::write($this->_log_row(
+                    $prefix,
+                    'ПРОПУЩЕН',
+                    $fio,
+                    '',
+                    '',
+                    'пустой GUID персоны'
+                ));
             }
             return;
         }
 
         // --- Запрос в Parsec ---
-				 // echo Debug::vars('263', $this->_session_id, $pep_guid); //exit;
         $response = $this->_cch_model->GetPerson($this->_session_id, $pep_guid);
-		//	echo Debug::vars('265', $response); //exit;
+
         // --- Ошибка SOAP ---
         if (isset($response->error) && $response->error) {
             $this->_stats['errors']++;
@@ -270,7 +338,14 @@ class Task_parsecSyncPeope extends Minion_Task
             $this->_errors[] = array('id_pep' => $id_pep, 'guid' => $pep_guid, 'message' => $message);
 
             if ($verbose) {
-                Minion_CLI::write($prefix . ' — 273 ОШИБКА SOAP: ' . $message);
+                Minion_CLI::write($this->_log_row(
+                    $prefix,
+                    'ОШИБКА SOAP',
+                    $fio,
+                    '',
+                    '',
+                    $this->_utf8_to_cp1251($message)
+                ));
             }
             return;
         }
@@ -288,14 +363,28 @@ class Task_parsecSyncPeope extends Minion_Task
             $this->_stats['not_in_parsec']++;
 
             if ($verbose) {
-                Minion_CLI::write($prefix . ' — 291 НЕТ В PARSEC (' . $fio . ')');
+                Minion_CLI::write($this->_log_row(
+                    $prefix,
+                    'НЕТ В PARSEC',
+                    $fio,
+                    '',
+                    '',
+                    ''
+                ));
             }
 
             if ($add) {
                 if ($this->_add_task_person($id_pep, 3)) {
                     $this->_stats['tasks_added']++;
                     if ($verbose) {
-                        Minion_CLI::write('            -> создана задача 3 (добавить пользователя)');
+                        Minion_CLI::write($this->_log_row(
+                            $prefix,
+                            '  -> задача',
+                            '',
+                            '',
+                            '',
+                            'создана задача 3 (добавить пользователя)'
+                        ));
                     }
                 }
             }
@@ -316,7 +405,14 @@ class Task_parsecSyncPeope extends Minion_Task
             // У персоны в Артонит нет организации — не можем сравнить
             $this->_stats['skipped']++;
             if ($verbose) {
-                Minion_CLI::write($prefix . ' — ПРОПУЩЕН: у персоны нет GUID организации в Артонит');
+                Minion_CLI::write($this->_log_row(
+                    $prefix,
+                    'ПРОПУЩЕН',
+                    $fio,
+                    '',
+                    '',
+                    'нет GUID организации в Артонит'
+                ));
             }
             return;
         }
@@ -327,10 +423,17 @@ class Task_parsecSyncPeope extends Minion_Task
             $this->_errors[] = array(
                 'id_pep'  => $id_pep,
                 'guid'    => $pep_guid,
-                'message' => 'В ответе GetPerson нет ORG_UNIT_ID',
+                'message' => 'В ответе GetPerson нет ORG_ID',
             );
             if ($verbose) {
-                Minion_CLI::write($prefix . ' — 357 ОШИБКА: в ответе Parsec нет ORG_UNIT_ID');
+                Minion_CLI::write($this->_log_row(
+                    $prefix,
+                    'ОШИБКА',
+                    $fio,
+                    'Artonit: ' . $org_guid . ' (' . $org_name . ')',
+                    '',
+                    'в ответе GetPerson нет ORG_ID'
+                ));
             }
             return;
         }
@@ -339,17 +442,36 @@ class Task_parsecSyncPeope extends Minion_Task
             // --- Организации не совпадают ---
             $this->_stats['org_mismatch']++;
 
+            // Получаем название организации в Parsec (с кэшем).
+            // _get_parsec_org_name уже возвращает строку в CP1251.
+            $parsec_org_name = $this->_get_parsec_org_name($parsec_org_guid);
+            if ($parsec_org_name === '') {
+                $parsec_org_name = '?';
+            }
+
             if ($verbose) {
-                Minion_CLI::write($prefix . ' — РАСХОЖДЕНИЕ ОРГАНИЗАЦИИ (' . $fio . ')');
-                Minion_CLI::write('            Artonit org_guid: ' . $org_guid . ' (' . $org_name . ')');
-                Minion_CLI::write('            Parsec  org_guid: ' . $parsec_org_guid);
+                Minion_CLI::write($this->_log_row(
+                    $prefix,
+                    'РАСХОЖДЕНИЕ',
+                    $fio,
+                    'Artonit: ' . $org_guid . ' (' . $org_name . ')',
+                    'Parsec: '  . $parsec_org_guid . ' (' . $parsec_org_name . ')',
+                    ''
+                ));
             }
 
             if ($add) {
                 if ($this->_add_task_person($id_pep, 35)) {
                     $this->_stats['tasks_added']++;
                     if ($verbose) {
-                        Minion_CLI::write('            -> создана задача 35 (изменить данные пользователя)');
+                        Minion_CLI::write($this->_log_row(
+                            $prefix,
+                            '  -> задача',
+                            '',
+                            '',
+                            '',
+                            'создана задача 35 (изменить данные пользователя)'
+                        ));
                     }
                 }
             }
@@ -358,9 +480,125 @@ class Task_parsecSyncPeope extends Minion_Task
             $this->_stats['org_match']++;
 
             if ($verbose) {
-                Minion_CLI::write($prefix . ' — OK (' . $fio . ', org=' . $org_name . ')');
+                Minion_CLI::write($this->_log_row(
+                    $prefix,
+                    'OK',
+                    $fio,
+                    'Artonit: ' . $org_guid . ' (' . $org_name . ')',
+                    'Parsec: '  . $parsec_org_guid . ' (' . $org_name . ')',
+                    ''
+                ));
             }
         }
+    }
+
+    /**
+     * Получает название организации в Parsec по её GUID.
+     * Результат кэшируется в памяти на время работы задачи.
+     * Название возвращается уже в CP1251 (Parsec отдаёт UTF-8).
+     *
+     * @param string $org_guid GUID организации в Parsec
+     * @return string Название или '' если не удалось получить
+     */
+    protected function _get_parsec_org_name($org_guid)
+    {
+        $org_guid = trim((string) $org_guid);
+
+        if ($org_guid === '' || empty($this->_session_id)) {
+            return '';
+        }
+
+        // Кэш
+        if (array_key_exists($org_guid, $this->_org_name_cache)) {
+            return $this->_org_name_cache[$org_guid];
+        }
+
+        $response = $this->_cch_model->GetOrgUnit($this->_session_id, $org_guid);
+
+        $name = '';
+
+        // Проверяем ошибку
+        if (!isset($response->error) || !$response->error) {
+            if (isset($response->GetOrgUnitResult) && $response->GetOrgUnitResult !== null) {
+                $org = $response->GetOrgUnitResult;
+
+                // Пробуем стандартные варианты
+                if (is_object($org)) {
+                    if (isset($org->NAME)) {
+                        $name = (string) $org->NAME;
+                    } elseif (isset($org->Name)) {
+                        $name = (string) $org->Name;
+                    } elseif (isset($org->OrgUnit->NAME)) {
+                        $name = (string) $org->OrgUnit->NAME;
+                    } elseif (isset($org->OrgUnit->Name)) {
+                        $name = (string) $org->OrgUnit->Name;
+                    }
+                } elseif (is_array($org)) {
+                    if (isset($org['NAME'])) {
+                        $name = (string) $org['NAME'];
+                    } elseif (isset($org['Name'])) {
+                        $name = (string) $org['Name'];
+                    }
+                }
+
+                // Фолбэк — рекурсивный поиск поля NAME
+                if ($name === '') {
+                    $name = $this->_find_name_recursive($org);
+                }
+            }
+        }
+
+        $name = trim($name);
+
+        // Parsec отдаёт UTF-8, лог в CP1251 — приводим к CP1251
+        if ($name !== '') {
+            $name = $this->_utf8_to_cp1251($name);
+        }
+
+        $this->_org_name_cache[$org_guid] = $name;
+
+        return $name;
+    }
+
+    /**
+     * Рекурсивно ищет в объекте/массиве поле NAME.
+     *
+     * @param mixed $data
+     * @param int   $depth
+     * @return string
+     */
+    protected function _find_name_recursive($data, $depth = 0)
+    {
+        if ($depth > 5) {
+            return '';
+        }
+
+        if (is_object($data)) {
+            $data = (array) $data;
+        }
+
+        if (!is_array($data)) {
+            return '';
+        }
+
+        // Приоритетные ключи
+        foreach (array('NAME', 'Name', 'name') as $key) {
+            if (isset($data[$key]) && is_scalar($data[$key]) && $data[$key] !== '') {
+                return (string) $data[$key];
+            }
+        }
+
+        // Вложенные объекты
+        foreach ($data as $value) {
+            if (is_object($value) || is_array($value)) {
+                $found = $this->_find_name_recursive($value, $depth + 1);
+                if ($found !== '') {
+                    return $found;
+                }
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -444,33 +682,12 @@ class Task_parsecSyncPeope extends Minion_Task
                     'id_pep=%s guid=%s : %s',
                     $err['id_pep'],
                     $err['guid'],
-                    $err['message']
+                    $this->_utf8_to_cp1251($err['message'])
                 ));
             }
             Minion_CLI::write('');
         }
 
         Minion_CLI::write('Готово.');
-    }
-
-    /**
-     * Преобразование строки из WIN1251 в UTF-8 (для вывода в консоль).
-     *
-     * @param string $str
-     * @return string
-     */
-    protected function _to_utf8($str)
-    {
-        if ($str === null || $str === '') {
-            return '';
-        }
-
-        // Пробуем определить: если строка валидный UTF-8 — оставляем как есть
-        if (function_exists('mb_check_encoding') && mb_check_encoding($str, 'UTF-8')) {
-            return $str;
-        }
-
-        $converted = @iconv('windows-1251', 'UTF-8//IGNORE', $str);
-        return ($converted === false) ? $str : $converted;
     }
 }
