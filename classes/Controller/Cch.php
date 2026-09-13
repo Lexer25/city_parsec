@@ -411,7 +411,7 @@ public function action_compareOrg()
 
     $resultList = array(
         'orgcount'          => 0,
-        'org_in_parsec'     => array(),
+       // 'org_in_parsec'     => array(),
         'org_not_in_parsec' => array(),
         'org_check_error'   => array(),
         'timeexcute'        => 0,
@@ -473,7 +473,7 @@ public function action_compareOrg()
                 }
             } else {
                 // Организация есть в Parsec
-                $resultList['org_in_parsec'][] = $guid;
+               // $resultList['org_in_parsec'][] = $guid;
 
                 // Опционально: здесь можно сравнить NAME / PARENT_ID
                 // и при расхождении поставить задачу 55 (изменение организации).
