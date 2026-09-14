@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Модуль Parsec — задачи сверки</title>
+<style>
+  /* ============ БАЗОВЫЕ СТИЛИ ============ */
+  :root {
+    --bg:        #f4f6f8;
+    --panel:     #ffffff;
+    --text:      #24292f;
+    --muted:     #57606a;
+    --border:    #d0d7de;
+    --accent:    #0969da;
+    --accent-bg: #ddf4ff;
+    --code-bg:   #f6f8fa;
+    --code-text: #24292f;
+    --thead-bg:  #eaeef2;
+    --zebra:     #f6f8fa;
+    --green:     #1a7f37;
+    --red:       #cf222e;
+    --orange:    #bc4c00;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, "PT Sans", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ============ БОКОВАЯ НАВИГАЦИЯ ============ */
+  aside {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 24px 18px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  aside h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+
+  aside .version {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  nav li { margin: 2px 0; }
+
+  nav a {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+    transition: background 0.12s, border-color 0.12s;
+  }
+
+  nav a:hover {
+    background: var(--accent-bg);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+
+  nav .sub a {
+    padding-left: 26px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ============ КОНТЕНТ ============ */
+  main {
+    padding: 40px 56px 80px;
+    max-width: 1100px;
+    background: var(--panel);
+    min-height: 100vh;
+  }
+
+  main > *:first-child { margin-top: 0; }
+
+  h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  h2 {
+    font-size: 22px;
+    margin: 44px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 20px;
+  }
+
+  h3 {
+    font-size: 17px;
+    margin: 26px 0 10px;
+    scroll-margin-top: 20px;
+  }
+
+  h4 {
+    font-size: 15px;
+    margin: 18px 0 8px;
+    color: var(--muted);
+  }
+
+  p { margin: 10px 0; }
+
+  .lead {
+    font-size: 16px;
+    color: var(--muted);
+    margin-bottom: 30px;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 12px 16px;
+    background: var(--code-bg);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 30px;
+  }
+
+  .meta strong { color: var(--text); }
+
+  /* ============ КОД ============ */
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--code-text);
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 12px 0;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  /* ============ ТАБЛИЦЫ ============ */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 22px;
+    font-size: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  thead {
+    background: var(--thead-bg);
+  }
+
+  th, td {
+    text-align: left;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  th {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) { background: var(--zebra); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  td code { white-space: nowrap; }
+
+  /* ============ БЛОКИ-ПРЕДУПРЕЖДЕНИЯ ============ */
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-bg);
+    padding: 12px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+
+  .callout.warn {
+    border-left-color: var(--orange);
+    background: #fff8c5;
+  }
+
+  .callout.danger {
+    border-left-color: var(--red);
+    background: #ffebe9;
+  }
+
+  .callout strong { display: inline; }
+
+  /* ============ СТАТУСЫ ============ */
+  .badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-family: monospace;
+    font-weight: 600;
+  }
+
+  .b-ok   { background: #dafbe1; color: var(--green); }
+  .b-warn { background: #fff1e5; color: var(--orange); }
+  .b-err  { background: #ffebe9; color: var(--red); }
+  .b-info { background: var(--accent-bg); color: var(--accent); }
+
+  /* ============ ПРОЧЕЕ ============ */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  ul, ol { padding-left: 22px; margin: 10px 0; }
+  li { margin: 4px 0; }
+
+  .top-link {
+    display: block;
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    margin-top: 8px;
+  }
+
+  .top-link:hover { color: var(--accent); }
+
+  /* ============ МОБИЛЬНЫЙ ============ */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    aside {
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    main { padding: 24px 20px 60px; }
+    h1 { font-size: 22px; }
+    h2 { font-size: 18px; }
+  }
+
+  /* ============ ПЕЧАТЬ ============ */
+  @media print {
+    aside { display: none; }
+    .layout { display: block; }
+    main { padding: 0; max-width: none; }
+    pre, table { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ======================= БОКОВАЯ НАВИГАЦИЯ ======================= -->
+<aside>
+  <h2>Содержание</h2>
+  <div class="version">Версия 1.0 · 2026-09-14</div>
+  <nav>
+    <ul>
+      <li><a href="#intro">Общие сведения</a></li>
+      <li class="sub">
+        <a href="#intro-files">Расположение</a>
+        <a href="#intro-run">Шаблон запуска</a>
+        <a href="#intro-opts">Общие опции</a>
+        <a href="#intro-ops">Операции</a>
+      </li>
+
+      <li><a href="#task1">1. Сверка персон</a></li>
+      <li><a href="#task2">2. Сверка карт</a></li>
+      <li><a href="#task3">3. Сверка организаций</a></li>
+      <li><a href="#task4">4. Сверка категорий доступа</a></li>
+
+      <li><a href="#order">5. Порядок запуска</a></li>
+      <li><a href="#errors">6. Диагностика</a></li>
+      <li><a href="#mock">7. Mock-режим</a></li>
+      <li><a href="#integration">8. Интегратор</a></li>
+      <li><a href="#stop">9. Остановка прогона</a></li>
+      <li><a href="#history">10. Версии</a></li>
+    </ul>
+  </nav>
+</aside>
+
+<!-- ======================= КОНТЕНТ ======================= -->
+<main>
+
+<h1 id="top">Модуль Parsec — задачи сверки</h1>
+<p class="lead">Справочник по четырём Minion-задачам для сверки данных СКУД Артонит и СКУД Parsec.</p>
+
+<div class="meta">
+  <span><strong>Версия:</strong> 1.0</span>
+  <span><strong>Дата:</strong> 2026-09-14</span>
+  <span><strong>Модуль:</strong> <code>parsec</code></span>
+  <span><strong>Платформа:</strong> Kohana 3.3 · Minion · Firebird</span>
+</div>
+
+<!-- ============================================================= -->
+<h2 id="intro">0. Общие сведения</h2>
+
+<p>Все четыре задачи — это Minion-таски модуля <code>parsec</code>, запускаются
+из командной строки через <code>minion</code>. Используют SOAP-клиент
+<code>Model_Cch</code> (включая mock-режим), работают с БД Артонит через
+<code>Database::instance('fb')</code>. Лог — табличный, с разделителем
+табуляции.</p>
+
+<h3 id="intro-files">Расположение задач</h3>
+<pre><code>c:\xampp\htdocs\city\modules\parsec\classes\Task\
+├── parsecSyncPeope.php           (сверка персон)
+├── parsec_sync_identifiers.php   (сверка карт)
+├── parsecSyncOrg.php             (сверка дерева организаций)
+└── parsecSyncAccessGroups.php    (сверка категорий доступа)</code></pre>
+
+<h3 id="intro-run">Шаблон запуска</h3>
+<pre><code>chcp 65001
+c:\xampp\php\php.exe ^
+    c:\xampp\htdocs\city\modules\minion\minion ^
+    --task=&lt;ИМЯ_ЗАДАЧИ&gt; [опции] ^
+    &gt; &lt;файл_лога&gt;.log 2&gt;&amp;1</code></pre>
+
+<div class="callout">
+  <strong>Кодировка логов:</strong> все логи пишутся в Windows-1251.
+  Открывайте их в Notepad++ с кодировкой <code>Windows-1251</code>.
+</div>
+
+<h3 id="intro-opts">Общие опции (для всех задач)</h3>
+<table>
+  <thead>
+    <tr><th>Опция</th><th>По умолчанию</th><th>Описание</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--add=1|0</code></td><td><code>0</code></td>
+        <td>Ставить ли задачи интегратору в <code>CARDINDEV</code></td></tr>
+    <tr><td><code>--limit=N</code></td><td><code>0</code></td>
+        <td>Ограничить количество проверяемых объектов</td></tr>
+    <tr><td><code>--verbose=1|0</code></td><td><code>1</code></td>
+        <td>Подробный вывод (0 — только итоги)</td></tr>
+  </tbody>
+</table>
+
+<h4>Специфичные опции</h4>
+<table>
+  <thead>
+    <tr><th>Опция</th><th>Где применима</th><th>Описание</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>--id_pep=N</code></td>
+      <td><code>parsecSyncPeope</code>,<br>
+          <code>parsec_sync_identifiers</code>,<br>
+          <code>parsecSyncAccessGroups</code></td>
+      <td>Проверить только одну персону</td>
+    </tr>
+    <tr>
+      <td><code>--id_org=N</code></td>
+      <td><code>parsecSyncOrg</code></td>
+      <td>Проверить только одну организацию</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="intro-ops">Сводная таблица операций интегратора</h3>
+<table>
+  <thead>
+    <tr>
+      <th style="width:90px;">Операция</th>
+      <th>Что значит</th>
+      <th>Кто ставит</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>3</strong></td>  <td>Добавить пользователя</td>              <td><code>parsecSyncPeope</code></td></tr>
+    <tr><td><strong>5</strong></td>  <td>Добавить организацию</td>               <td><code>parsecSyncOrg</code></td></tr>
+    <tr><td><strong>7</strong></td>  <td>Добавить категорию доступа человеку</td><td><code>parsecSyncAccessGroups</code></td></tr>
+    <tr><td><strong>8</strong></td>  <td>Удалить категорию доступа человеку</td><td><code>parsecSyncAccessGroups</code></td></tr>
+    <tr><td><strong>9</strong></td>  <td>Добавить карту человеку</td>            <td><code>parsec_sync_identifiers</code></td></tr>
+    <tr><td><strong>10</strong></td> <td>Удалить карту у человека</td>           <td><code>parsec_sync_identifiers</code></td></tr>
+    <tr><td><strong>35</strong></td> <td>Изменить данные пользователя</td>       <td><code>parsecSyncPeope</code></td></tr>
+    <tr><td><strong>55</strong></td> <td>Изменить данные организации</td>        <td><code>parsecSyncOrg</code></td></tr>
+  </tbody>
+</table>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="task1">1. Сверка персон</h2>
+
+<table>
+  <tbody>
+    <tr><th style="width:180px;">Имя задачи</th>    <td><code>parsecSyncPeope</code></td></tr>
+    <tr><th>Файл</th>                                <td><code>Task/parsecSyncPeope.php</code></td></tr>
+    <tr><th>Класс</th>                               <td><code>Task_parsecSyncPeope</code></td></tr>
+    <tr><th>Что проверяет</th>                       <td>Наличие персон Артонит в Parsec и совпадение их организации</td></tr>
+  </tbody>
+</table>
+
+<h3>Что делает</h3>
+<ol>
+  <li>Берёт персон из Артонит (<code>PEOPLE.id_pep &gt; 1</code>, <code>guid</code> не пуст) вместе с их организацией.</li>
+  <li>По <code>guid</code> персоны вызывает <code>GetPerson(pep_guid)</code> в Parsec.</li>
+  <li>Если персоны нет — фиксирует <span class="badge b-warn">НЕТ В PARSEC</span>.</li>
+  <li>Если есть — сравнивает <code>ORG_ID</code> из Parsec с <code>ORGANIZATION.guid</code> персоны в Артонит.</li>
+  <li>Через <code>GetOrgUnit</code> получает название организации Parsec (с кэшем).</li>
+</ol>
+
+<h3>Задачи интегратору</h3>
+<table>
+  <thead>
+    <tr><th style="width:90px;">Операция</th><th>Когда ставится</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>3</strong></td>  <td>Персоны нет в Parsec — добавить пользователя</td></tr>
+    <tr><td><strong>35</strong></td> <td>Организация персоны в Parsec не совпадает с Артонит — изменить данные</td></tr>
+  </tbody>
+</table>
+
+<h3>Примеры запуска</h3>
+<pre><code>:: Одна персона, без задач
+... --task=parsecSyncPeope --id_pep=4 --add=0 &gt; sync_pep.log 2&gt;&amp;1
+
+:: Первые 100, без задач
+... --task=parsecSyncPeope --limit=100 --add=0 &gt; sync_pep.log 2&gt;&amp;1
+
+:: Полный прогон с постановкой задач
+... --task=parsecSyncPeope --add=1 &gt; sync_pep_all.log 2&gt;&amp;1</code></pre>
+
+<h3>Формат лога</h3>
+<pre><code>Счётчик  Статус         ФИО                 Artonit                         Parsec                          Примечание
+[1/10] id_pep=4 guid=...  РАСХОЖДЕНИЕ  Аветисян С, Г.  Artonit: &lt;guid&gt; (1 корпус)  Parsec: &lt;guid&gt; (ООО Ромашка)
+[2/10] id_pep=5 guid=...  OK           Авилкина М. В.  Artonit: &lt;guid&gt; (1 корпус)  Parsec: &lt;guid&gt; (1 корпус)</code></pre>
+
+<p><strong>Статусы:</strong>
+  <span class="badge b-ok">OK</span>
+  <span class="badge b-warn">РАСХОЖДЕНИЕ</span>
+  <span class="badge b-warn">НЕТ В PARSEC</span>
+  <span class="badge b-info">ПРОПУЩЕН</span>
+  <span class="badge b-err">ОШИБКА SOAP</span>
+  <span class="badge b-err">ОШИБКА</span>
+</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="task2">2. Сверка идентификаторов (карт)</h2>
+
+<table>
+  <tbody>
+    <tr><th style="width:180px;">Имя задачи</th>    <td><code>parsec_sync_identifiers</code></td></tr>
+    <tr><th>Файл</th>                                <td><code>Task/parsec_sync_identifiers.php</code></td></tr>
+    <tr><th>Класс</th>                               <td><code>Task_parsec_sync_identifiers</code></td></tr>
+    <tr><th>Что проверяет</th>                       <td>Совпадение карт персоны в Артонит и Parsec</td></tr>
+  </tbody>
+</table>
+
+<h3>Что делает</h3>
+<ol>
+  <li>Берёт персон с их активными RFID-картами (<code>CARD.id_cardtype = 1</code>, <code>ACTIVE &gt; 0</code>).</li>
+  <li>По каждой персоне вызывает <code>GetPersonIdentifiers(pep_guid)</code>.</li>
+  <li>Приводит обе стороны к единому формату — <strong>8 hex-символов upper</strong>:
+    <ul>
+      <li>Артонит <code>id_card</code> (десятичное, <code>7419840</code>) → <code>dechex</code> → <code>00713490</code>,</li>
+      <li>Parsec <code>CODE</code> (<code>007B4598</code>) — уже hex, нормализуется через <code>str_pad</code>.</li>
+    </ul>
+  </li>
+  <li>Сравнивает множества карт.</li>
+</ol>
+
+<h3>Задачи интегратору</h3>
+<table>
+  <thead>
+    <tr><th style="width:90px;">Операция</th><th>Когда ставится</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>9</strong></td>  <td>Карта есть в Артонит, нет в Parsec — добавить</td></tr>
+    <tr><td><strong>10</strong></td> <td>Карта есть в Parsec, нет в Артонит — удалить</td></tr>
+  </tbody>
+</table>
+
+<h3>Примеры запуска</h3>
+<pre><code>:: Одна персона
+... --task=parsec_sync_identifiers --id_pep=7 --add=0 &gt; sync_ids.log 2&gt;&amp;1
+
+:: Массовый прогон без задач
+... --task=parsec_sync_identifiers --add=0 &gt; sync_ids_all.log 2&gt;&amp;1</code></pre>
+
+<h3>Формат лога</h3>
+<pre><code>[1/1] id_pep=7 guid=441DC23B-...  OK           Акимова Л.  007B4598  007B4598
+[2/1] id_pep=8 guid=...           РАСХОЖДЕНИЕ  Петрова А.  007B4598              + в Артонит: 007B4598</code></pre>
+
+<p><strong>Примечания:</strong></p>
+<ul>
+  <li><code>+ в Артонит: &lt;код&gt;</code> — карта есть в Артонит, нет в Parsec → задача <strong>9</strong></li>
+  <li><code>- в Parsec: &lt;код&gt;</code>  — карта есть в Parsec, нет в Артонит → задача <strong>10</strong></li>
+</ul>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="task3">3. Сверка дерева организаций</h2>
+
+<table>
+  <tbody>
+    <tr><th style="width:180px;">Имя задачи</th>    <td><code>parsecSyncOrg</code></td></tr>
+    <tr><th>Файл</th>                                <td><code>Task/parsecSyncOrg.php</code></td></tr>
+    <tr><th>Класс</th>                               <td><code>Task_parsecSyncOrg</code></td></tr>
+    <tr><th>Что проверяет</th>                       <td>Наличие организаций Артонит в Parsec и совпадение их родителя</td></tr>
+  </tbody>
+</table>
+
+<h3>Что делает</h3>
+<ol>
+  <li>Берёт организации из Артонит (<code>ORGANIZATION.id_org &gt; 3</code>, <code>guid</code> не пуст) с родителем.</li>
+  <li>По <code>guid</code> организации вызывает <code>GetOrgUnit(org_guid)</code>.</li>
+  <li>Если организации нет — <span class="badge b-warn">НЕТ В PARSEC</span>.</li>
+  <li>Если есть — сравнивает:
+    <ul>
+      <li><code>PARENT_ID</code> в Parsec с <code>ORGANIZATION.guid</code> родителя в Артонит,</li>
+      <li><code>NAME</code> в Parsec с названием организации в Артонит (опционально).</li>
+    </ul>
+  </li>
+</ol>
+
+<h3>Задачи интегратору</h3>
+<table>
+  <thead>
+    <tr><th style="width:90px;">Операция</th><th>Когда ставится</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>5</strong></td>  <td>Организации нет в Parsec — добавить</td></tr>
+    <tr><td><strong>55</strong></td> <td>Родитель или название расходятся — изменить</td></tr>
+  </tbody>
+</table>
+
+<h3>Примеры запуска</h3>
+<pre><code>:: Одна организация
+... --task=parsecSyncOrg --id_org=5 --add=0 &gt; sync_org.log 2&gt;&amp;1
+
+:: Массовый прогон
+... --task=parsecSyncOrg --add=0 &gt; sync_org_all.log 2&gt;&amp;1</code></pre>
+
+<h3>Формат лога</h3>
+<pre><code>[1/10] id_org=5 guid=...  OK          1 корпус  parent: &lt;guid&gt; (корень)    parent: &lt;guid&gt;
+[2/10] id_org=6 guid=...  РАСХОЖДЕНИЕ  2 корпус  parent: &lt;guid&gt; (1 корпус)  parent: &lt;guid&gt;  родитель не совпадает</code></pre>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="task4">4. Сверка категорий доступа</h2>
+
+<table>
+  <tbody>
+    <tr><th style="width:180px;">Имя задачи</th>    <td><code>parsecSyncAccessGroups</code></td></tr>
+    <tr><th>Файл</th>                                <td><code>Task/parsecSyncAccessGroups.php</code></td></tr>
+    <tr><th>Класс</th>                               <td><code>Task_parsecSyncAccessGroups</code></td></tr>
+    <tr><th>Что проверяет</th>                       <td>Категории доступа человека в Артонит vs группы доступа его карт в Parsec</td></tr>
+  </tbody>
+</table>
+
+<h3>Что делает</h3>
+<ol>
+  <li>Берёт категории персоны из Артонит (<code>SS_ACCESSUSER</code> → <code>ACCESSNAME.guid</code>).</li>
+  <li>Через <code>GetPersonIdentifiers</code> получает карты персоны в Parsec, у каждой — <code>ACCGROUP_ID</code>.</li>
+  <li><strong>Учитывает «специальную иерархию» Parsec</strong>
+      (<code>ParsecIntegrationDescription_20230113.pdf</code>, стр. 62):
+    <ul>
+      <li>эффективный набор групп карты =
+        <code>{ACCGROUP_ID} ∪ GetInheritedAccessGroups(ACCGROUP_ID)</code>,</li>
+      <li>объединяет по всем картам персоны.</li>
+    </ul>
+  </li>
+  <li>Оставляет только группы, известные в <code>ACCESSNAME</code> Артонит
+      (отбрасывает синтетические «контейнерные» группы).</li>
+  <li>Сравнивает множества.</li>
+</ol>
+
+<h3>Задачи интегратору</h3>
+<table>
+  <thead>
+    <tr><th style="width:90px;">Операция</th><th>Когда ставится</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>7</strong></td> <td>Категория есть у человека в Артонит, но отсутствует на его картах в Parsec</td></tr>
+    <tr><td><strong>8</strong></td> <td>Категория есть на картах в Parsec, но отсутствует у человека в Артонит</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  Сверка делается <strong>на уровне персоны</strong>, как в триггерах
+  <code>PARSEC_07_SS_ACCESSUSER_AI0</code> / <code>PARSEC_08_SS_ACCESSUSER_AD0</code>.
+  Интегратор сам раскидывает категорию по картам.
+</div>
+
+<h3>Примеры запуска</h3>
+<pre><code>:: Одна персона
+... --task=parsecSyncAccessGroups --id_pep=7 --add=0 &gt; sync_ag.log 2&gt;&amp;1
+
+:: Массовый прогон
+... --task=parsecSyncAccessGroups --add=0 &gt; sync_ag_all.log 2&gt;&amp;1</code></pre>
+
+<h3>Формат лога</h3>
+<pre><code>[1/1] id_pep=7 guid=...  OK          Акимова Л.  &lt;guid&gt; (Администраторы)  &lt;guid&gt; (Администраторы)
+[2/1] id_pep=8 guid=...  РАСХОЖДЕНИЕ Петрова А.  &lt;guid&gt; (Гости)                               + в Артонит: &lt;guid&gt;</code></pre>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="order">5. Рекомендуемый порядок запуска</h2>
+
+<p>При полной сверке порядок важен: сначала организации, потом персоны,
+потом карты, потом категории.</p>
+
+<pre><code>chcp 65001
+
+:: 1. Организации
+c:\xampp\php\php.exe ...\minion --task=parsecSyncOrg --add=1 &gt; log_org.log 2&gt;&amp;1
+
+:: 2. Персоны
+c:\xampp\php\php.exe ...\minion --task=parsecSyncPeope --add=1 &gt; log_pep.log 2&gt;&amp;1
+
+:: 3. Карты
+c:\xampp\php\php.exe ...\minion --task=parsec_sync_identifiers --add=1 &gt; log_ids.log 2&gt;&amp;1
+
+:: 4. Категории доступа
+c:\xampp\php\php.exe ...\minion --task=parsecSyncAccessGroups --add=1 &gt; log_ag.log 2&gt;&amp;1</code></pre>
+
+<div class="callout warn">
+  <strong>Правило.</strong> Перед массовым прогоном с <code>--add=1</code>
+  <strong>всегда</strong> сначала запускайте с <code>--add=0</code>.
+  Убедитесь, что количество расхождений правдоподобно (не «все 4492 персоны»).
+  Если расхождений подозрительно много — почти всегда это означает, что
+  парсер не находит нужное поле в SOAP-ответе.
+</div>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="errors">6. Обработка ошибок и диагностика</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:36%;">Симптом</th>
+      <th style="width:30%;">Причина</th>
+      <th>Что делать</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Все персоны в «НЕТ В PARSEC»</td>
+      <td>SOAP недоступен, mock отключён, нет сессии</td>
+      <td>Проверить <code>modules/parsec/config/soap.php</code>, <code>mock_mode</code>, доступность WSDL</td>
+    </tr>
+    <tr>
+      <td>Все персоны в «РАСХОЖДЕНИЕ + в Артонит»</td>
+      <td><code>ORG_ID</code>/<code>PARENT_ID</code>/<code>CODE</code> не извлекаются</td>
+      <td>Добавить временный <code>print_r($response)</code> для одной записи, посмотреть реальные имена полей</td>
+    </tr>
+    <tr>
+      <td>Все персоны в «ОШИБКА: нет ORG_ID»</td>
+      <td>Ответ <code>GetPerson</code> не содержит ожидаемого поля</td>
+      <td>Смотреть сырой ответ, поправить извлечение</td>
+    </tr>
+    <tr>
+      <td>Кракозябры в логе (только ФИО)</td>
+      <td>Файл <code>.php</code> в UTF-8, данные Firebird в CP1251</td>
+      <td>Пересохранить <code>.php</code> в Windows-1251<br>
+          (Notepad++: <code>Кодировки → Преобразовать в ANSI</code>)</td>
+    </tr>
+    <tr>
+      <td>Кракозябры только в названии организации из Parsec</td>
+      <td>Parsec отдаёт UTF-8, лог в CP1251</td>
+      <td>Уже обрабатывается через <code>_utf8_to_cp1251</code>. Проверить, что для поля вызван этот хелпер</td>
+    </tr>
+    <tr>
+      <td>Слишком много задач при <code>--add=1</code></td>
+      <td>Ложные расхождения из-за парсера</td>
+      <td>Остановить, разобраться, удалить лишние задачи из <code>CARDINDEV</code>, перезапустить</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Просмотр сырого SOAP-ответа</h3>
+<p>Временная вставка в соответствующем методе задачи:</p>
+<pre><code>static $debug_done = false;
+if (!$debug_done) {
+    $debug_done = true;
+    Minion_CLI::write('=== DEBUG ===');
+    Minion_CLI::write(print_r($response, true));
+    Minion_CLI::write('=== END ===');
+}</code></pre>
+<p>Запустить с <code>--id_pep=1 --add=0 --verbose=1</code>
+(или <code>--id_org=5</code>) и посмотреть в логе структуру ответа.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="mock">7. Mock-режим</h2>
+
+<p>В <code>modules/parsec/config/soap.php</code>:</p>
+<pre><code>'mock_mode' =&gt; true,   // true — работа без реального Parsec</code></pre>
+
+<p>В mock-режиме <code>Model_Cch</code> использует <code>MockSoapClient</code>,
+который возвращает фиксированные данные. Удобно для отладки логики
+парсеров и постановки задач — но <strong>все</strong> персоны/карты/организации
+будут выглядеть не так, как в реальной системе.</p>
+
+<div class="callout danger">
+  Перед рабочей сверкой mock <strong>обязательно выключить</strong>:
+  <code>'mock_mode' =&gt; false,</code>
+</div>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="integration">8. Просмотр результатов работы интегратора</h2>
+
+<p>После того как задачи созданы в <code>CARDINDEV</code>, их подхватывает
+внешний сервис:</p>
+
+<pre><code>C:\IntegrationClient\Service\ParsecIntegrationClient.exe</code></pre>
+
+<p>Логи интегратора:</p>
+<pre><code>C:\IntegrationClient\log\
+C:\IntegrationClient\state.json</code></pre>
+
+<p>Отображение состояния — на странице модуля:</p>
+<pre><code>http://&lt;host&gt;/parsec</code></pre>
+
+<p>Очередь задач — там же (таблица <code>CARDINDEV</code>).</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="stop">9. Как остановить массовый прогон</h2>
+
+<p><kbd>Ctrl</kbd>+<kbd>C</kbd> в окне консоли. Все уже созданные задачи
+в <code>CARDINDEV</code> останутся. Если их надо откатить:</p>
+
+<pre><code>-- Посмотреть, что создалось
+SELECT cd.id_cardindev, cd.operation, cd.id_card, cd.id_pep, cd.time_stamp
+FROM cardindev cd
+WHERE cd.time_stamp &gt;= '2026-09-14'
+ORDER BY cd.id_cardindev DESC;
+
+-- Удалить задачи конкретной операции, созданные после определённого времени
+DELETE FROM cardindev cd
+WHERE cd.operation IN (3, 35)
+  AND cd.time_stamp &gt;= '2026-09-14';
+
+-- Или снести всё (аккуратно!)
+DELETE FROM cardindev;</code></pre>
+
+<div class="callout danger">
+  Перед удалением — сделайте бэкап таблицы <code>CARDINDEV</code>.
+</div>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ============================================================= -->
+<h2 id="history">10. Версии и изменения</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:80px;">Версия</th>
+      <th style="width:130px;">Дата</th>
+      <th>Что сделано</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1.0</td>
+      <td>2026-09-14</td>
+      <td>Первая версия документации по четырём задачам</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+<p style="text-align:center; color: var(--muted); font-size:13px;">
+  Модуль Parsec · документация задач сверки · 2026
+</p>
+
+</main>
+</div>
+</body>
+</html>

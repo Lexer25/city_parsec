@@ -1,4 +1,9 @@
 history modules parsec
+Вер. 2.0.11
+14.09.2026
+[+]
+Добавлены задачи (раздел C:\xampp\htdocs\city\modules\parsec\classes\Task) для сверки данных в Артонит и Парсек.
+
 вер. 2.0.10
 11.09.2026
 [*]

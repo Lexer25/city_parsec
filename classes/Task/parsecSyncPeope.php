@@ -252,7 +252,7 @@ class Task_parsecSyncPeope extends Minion_Task
      */
     protected function _get_people_list($id_pep = 0, $limit = 0)
     {
-        $sql = 'SELECT first 20 p.id_pep,
+        $sql = 'SELECT p.id_pep,
                        p.guid              AS pep_guid,
                        p.surname,
                        p.name,
