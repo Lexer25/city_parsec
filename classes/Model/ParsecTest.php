@@ -23,7 +23,7 @@ class Model_ParsecTest extends Model
     }
 
     // =================================================================
-    // add_org / add_person / add_card / add_access
+    // 1. Организация
     // =================================================================
 
     public function add_org(array $p)
@@ -47,8 +47,8 @@ class Model_ParsecTest extends Model
         $before = $this->max_cardindev_id();
 
         $sql = 'INSERT INTO ORGANIZATION (ID_DB, NAME, GUID, ID_PARENT) VALUES ('
-             . '1, ' . $this->_str($name) . ', ' . $this->_str($guid)
-             . ', ' . (int) $parent_id . ')';
+             . '1, ' . $this->_str($name) . ', ' . trim($this->_str($guid)) . ', ' . (int) $parent_id
+             . ')';
 
         try {
             DB::query(Database::INSERT, $sql)->execute($this->_db);
@@ -56,10 +56,12 @@ class Model_ParsecTest extends Model
             return $this->_err('126 INSERT ORGANIZATION: ' . $e->getMessage(), 500);
         }
 
+        $id_org = $this->find_org_id($guid);
+
         return array(
             'ok'            => true,
             'operation'     => 'add_org',
-            'id_org'        => $this->find_org_id($guid),
+            'id_org'        => $id_org,
             'guid'          => $guid,
             'name'          => $name,
             'parent_guid'   => $parent_guid,
@@ -67,6 +69,10 @@ class Model_ParsecTest extends Model
             'cardindev_new' => $this->new_cardindev($before),
         );
     }
+
+    // =================================================================
+    // 2. Персона
+    // =================================================================
 
     public function add_person(array $p)
     {
@@ -95,11 +101,11 @@ class Model_ParsecTest extends Model
 
         $sql = 'INSERT INTO PEOPLE (ID_DB, SURNAME, NAME, PATRONYMIC, GUID, ID_ORG, TABNUM) VALUES ('
              . '1, '
-             . $this->_str($surname)    . ', '
-             . $this->_str($name)       . ', '
-             . $this->_str($patronymic) . ', '
-             . $this->_str($guid)       . ', '
-             . (int) $id_org            . ', '
+             . $this->_str($surname)          . ', '
+             . $this->_str($name)             . ', '
+             . $this->_str($patronymic)       . ', '
+             . trim($this->_str($guid))       . ', '
+             . (int) $id_org                  . ', '
              . $this->_str($tabnum)
              . ')';
 
@@ -123,6 +129,10 @@ class Model_ParsecTest extends Model
         );
     }
 
+    // =================================================================
+    // 3. Карта
+    // =================================================================
+
     public function add_card(array $p)
     {
         $pep_guid = trim((string) Arr::get($p, 'pep_guid', ''));
@@ -131,13 +141,16 @@ class Model_ParsecTest extends Model
         if ($pep_guid === '' || $card === '') {
             return $this->_err('207 Параметры pep_guid и card обязательны', 400);
         }
+
         if (!ctype_digit($card)) {
-            return $this->_err('215 card должен быть числом', 400);
+            return $this->_err('215 card должен быть числом (десятичный номер карты)', 400);
         }
 
         $card_dec = (int) $card;
-        if ($card_dec < 1 || $card_dec > 16777215) {   // 0xFFFFFF
-            return $this->_err('221 card вне диапазона 1..0xFFFFFF', 400);
+        $max      = 4294967296;   // 2^32
+
+        if ($card_dec < 1 || $card_dec > $max) {
+            return $this->_err('221 card вне диапазона 1..2^32', 400);
         }
 
         $id_pep = $this->find_pep_id($pep_guid);
@@ -145,21 +158,22 @@ class Model_ParsecTest extends Model
             return $this->_err('227 Персона не найдена: ' . $pep_guid, 404);
         }
 
-        $owner = $this->find_card_owner($card_dec);
-        if ($owner !== null) {
+        $_id_pep = $this->find_card_owner($card_dec);
+        if ($_id_pep !== null) {
             return $this->_err(
                 '233 Карта ' . $card_dec
-                . ' (hex ' . strtoupper(str_pad(dechex($card_dec), 6, '0', STR_PAD_LEFT)) . ')'
-                . ' уже выдана персоне id_pep = ' . $owner['id_pep']
-                . ' (guid ' . $owner['pep_guid'] . ')',
+                . ' (hex ' . strtoupper(str_pad(dechex($card_dec), 8, '0', STR_PAD_LEFT)) . ')'
+                . ' уже выдана персоне id_pep = ' . $_id_pep,
                 409
             );
         }
 
         $before = $this->max_cardindev_id();
 
+        // ACTIVE — зарезервированное слово Firebird, обязательно в кавычках
         $sql = 'INSERT INTO CARD (ID_DB, ID_PEP, ID_CARD, TIMESTART, ID_CARDTYPE, "ACTIVE") VALUES ('
-             . '1, ' . (int) $id_pep . ', ' . $card_dec . ', \'now\', 1, 1)';
+             . '1, ' . (int) $id_pep . ', ' . $card_dec . ', \'now\', 1, 1'
+             . ')';
 
         try {
             DB::query(Database::INSERT, $sql)->execute($this->_db);
@@ -173,10 +187,14 @@ class Model_ParsecTest extends Model
             'id_pep'        => $id_pep,
             'pep_guid'      => $pep_guid,
             'card'          => $card_dec,
-            'card_hex'      => strtoupper(str_pad(dechex($card_dec), 6, '0', STR_PAD_LEFT)),
+            'card_hex'      => strtoupper(str_pad(dechex($card_dec), 8, '0', STR_PAD_LEFT)),
             'cardindev_new' => $this->new_cardindev($before),
         );
     }
+
+    // =================================================================
+    // 4. Категория доступа
+    // =================================================================
 
     public function add_access(array $p)
     {
@@ -195,7 +213,8 @@ class Model_ParsecTest extends Model
         $before = $this->max_cardindev_id();
 
         $sql = 'INSERT INTO SS_ACCESSUSER (ID_DB, ID_PEP, ID_ACCESSNAME) VALUES ('
-             . '1, ' . (int) $id_pep . ', ' . (int) $accessname_id . ')';
+             . '1, ' . (int) $id_pep . ', ' . (int) $accessname_id
+             . ')';
 
         try {
             DB::query(Database::INSERT, $sql)->execute($this->_db);
@@ -214,72 +233,8 @@ class Model_ParsecTest extends Model
     }
 
     // =================================================================
-    // cleanup / status
+    // Статус
     // =================================================================
-
-    public function cleanup(array $p = array())
-    {
-        $prefix = trim((string) Arr::get($p, 'prefix', 'TEST-'));
-        if ($prefix === '') {
-            $prefix = 'TEST-';
-        }
-
-        $like = "'" . str_replace("'", "''", $prefix) . "%'";
-        $base = $this->max_cardindev_id();
-        $out  = array();
-
-        $pep_ids = array();
-        try {
-            $rows = DB::query(Database::SELECT,
-                'SELECT ID_PEP FROM PEOPLE WHERE GUID LIKE ' . $like
-            )->execute($this->_db)->as_array();
-            foreach ($rows as $r) {
-                $pep_ids[] = (int) Arr::get($r, 'ID_PEP');
-            }
-        } catch (Exception $e) {
-            return $this->_err('SELECT PEOPLE: ' . $e->getMessage(), 500);
-        }
-
-        if (!empty($pep_ids)) {
-            $in = implode(',', $pep_ids);
-            try {
-                DB::query(Database::DELETE, 'DELETE FROM CARD WHERE ID_PEP IN (' . $in . ')')
-                    ->execute($this->_db);
-                $out['CARD'] = count($pep_ids);
-            } catch (Exception $e) { $out['CARD_error'] = $e->getMessage(); }
-
-            try {
-                DB::query(Database::DELETE, 'DELETE FROM SS_ACCESSUSER WHERE ID_PEP IN (' . $in . ')')
-                    ->execute($this->_db);
-                $out['SS_ACCESSUSER'] = count($pep_ids);
-            } catch (Exception $e) { $out['SS_ACCESSUSER_error'] = $e->getMessage(); }
-        }
-
-        try {
-            DB::query(Database::DELETE, 'DELETE FROM PEOPLE WHERE GUID LIKE ' . $like)
-                ->execute($this->_db);
-            $out['PEOPLE'] = 'ok';
-        } catch (Exception $e) { $out['PEOPLE_error'] = $e->getMessage(); }
-
-        try {
-            DB::query(Database::DELETE, 'DELETE FROM ORGANIZATION WHERE GUID LIKE ' . $like)
-                ->execute($this->_db);
-            $out['ORGANIZATION'] = 'ok';
-        } catch (Exception $e) { $out['ORGANIZATION_error'] = $e->getMessage(); }
-
-        try {
-            DB::query(Database::DELETE, 'DELETE FROM CARDINDEV WHERE ID_CARDINDEV > ' . (int) $base)
-                ->execute($this->_db);
-            $out['CARDINDEV_cleaned'] = true;
-        } catch (Exception $e) { $out['CARDINDEV_error'] = $e->getMessage(); }
-
-        return array(
-            'ok'        => true,
-            'operation' => 'cleanup',
-            'prefix'    => $prefix,
-            'deleted'   => $out,
-        );
-    }
 
     public function status(array $p = array())
     {
@@ -288,14 +243,18 @@ class Model_ParsecTest extends Model
             $limit = 20;
         }
 
+        $max = $this->max_cardindev_id();
+
         $sql = 'SELECT FIRST ' . $limit
              . ' ID_CARDINDEV, OPERATION, ID_CARD, ID_PEP, ATTEMPTS, TIME_STAMP'
              . ' FROM CARDINDEV ORDER BY ID_CARDINDEV DESC';
 
         try {
-            $rows = DB::query(Database::SELECT, $sql)->execute($this->_db)->as_array();
+            $rows = DB::query(Database::SELECT, $sql)
+                ->execute($this->_db)
+                ->as_array();
         } catch (Exception $e) {
-            return $this->_err('SELECT CARDINDEV: ' . $e->getMessage(), 500);
+            return $this->_err('322 SELECT CARDINDEV: ' . $e->getMessage(), 500);
         }
 
         $out = array();
@@ -313,19 +272,105 @@ class Model_ParsecTest extends Model
         return array(
             'ok'        => true,
             'operation' => 'status',
-            'max_id'    => $this->max_cardindev_id(),
+            'max_id'    => $max,
             'rows'      => $out,
         );
     }
 
     // =================================================================
-    // Helpers, доступные снаружи
+    // Cleanup
+    // =================================================================
+
+    public function cleanup(array $p = array())
+    {
+        $prefix = trim((string) Arr::get($p, 'prefix', 'TEST-'));
+        if ($prefix === '') {
+            $prefix = 'TEST-';
+        }
+
+        $escaped = str_replace("'", "''", $prefix);
+        $like    = "'" . $escaped . "%'";
+        $base    = $this->max_cardindev_id();
+
+        $deleted = array();
+
+        // 1. Найти тестовых персон
+        $pep_ids = array();
+        try {
+            $rows = DB::query(Database::SELECT,
+                'SELECT ID_PEP FROM PEOPLE WHERE GUID LIKE ' . $like
+            )->execute($this->_db)->as_array();
+            foreach ($rows as $r) {
+                $pep_ids[] = (int) Arr::get($r, 'ID_PEP');
+            }
+        } catch (Exception $e) {
+            return $this->_err('371 SELECT PEOPLE: ' . $e->getMessage(), 500);
+        }
+
+        // 2. Удалить карты и категории доступа тестовых персон
+        if (!empty($pep_ids)) {
+            try {
+                $sql = 'DELETE FROM CARD WHERE ID_PEP IN (' . implode(',', $pep_ids) . ')';
+                DB::query(Database::DELETE, $sql)->execute($this->_db);
+                $deleted['CARD'] = count($pep_ids);
+            } catch (Exception $e) {
+                $deleted['CARD_error'] = $e->getMessage();
+            }
+
+            try {
+                $sql = 'DELETE FROM SS_ACCESSUSER WHERE ID_PEP IN (' . implode(',', $pep_ids) . ')';
+                DB::query(Database::DELETE, $sql)->execute($this->_db);
+                $deleted['SS_ACCESSUSER'] = count($pep_ids);
+            } catch (Exception $e) {
+                $deleted['SS_ACCESSUSER_error'] = $e->getMessage();
+            }
+        }
+
+        // 3. Удалить персон
+        try {
+            $sql = 'DELETE FROM PEOPLE WHERE GUID LIKE ' . $like;
+            DB::query(Database::DELETE, $sql)->execute($this->_db);
+            $deleted['PEOPLE'] = 'ok';
+        } catch (Exception $e) {
+            $deleted['PEOPLE_error'] = $e->getMessage();
+        }
+
+        // 4. Удалить организации
+        try {
+            $sql = 'DELETE FROM ORGANIZATION WHERE GUID LIKE ' . $like;
+            DB::query(Database::DELETE, $sql)->execute($this->_db);
+            $deleted['ORGANIZATION'] = 'ok';
+        } catch (Exception $e) {
+            $deleted['ORGANIZATION_error'] = $e->getMessage();
+        }
+
+        // 5. Снести всё, что наросло в CARDINDEV за время чистки
+        try {
+            DB::query(Database::DELETE,
+                'DELETE FROM CARDINDEV WHERE ID_CARDINDEV > ' . (int) $base
+            )->execute($this->_db);
+            $deleted['CARDINDEV_cleaned'] = true;
+        } catch (Exception $e) {
+            $deleted['CARDINDEV_error'] = $e->getMessage();
+        }
+
+        return array(
+            'ok'        => true,
+            'operation' => 'cleanup',
+            'prefix'    => $prefix,
+            'deleted'   => $deleted,
+        );
+    }
+
+    // =================================================================
+    // Публичные хелперы
     // =================================================================
 
     public function find_org_id($guid)
     {
         $sql = 'SELECT ID_ORG AS ID FROM ORGANIZATION '
-             . 'WHERE GUID = ' . $this->_str($guid) . ' ORDER BY ID_ORG DESC';
+             . 'WHERE GUID = ' . trim($this->_str($guid)) . ' '
+             . 'ORDER BY ID_ORG DESC';
         try {
             $r = DB::query(Database::SELECT, $sql)->execute($this->_db)->as_array();
             return isset($r[0]) ? (int) Arr::get($r[0], 'ID') : null;
@@ -337,7 +382,8 @@ class Model_ParsecTest extends Model
     public function find_pep_id($guid)
     {
         $sql = 'SELECT ID_PEP AS ID FROM PEOPLE '
-             . 'WHERE GUID = ' . $this->_str($guid) . ' ORDER BY ID_PEP DESC';
+             . 'WHERE GUID = ' . trim($this->_str($guid)) . ' '
+             . 'ORDER BY ID_PEP DESC';
         try {
             $r = DB::query(Database::SELECT, $sql)->execute($this->_db)->as_array();
             return isset($r[0]) ? (int) Arr::get($r[0], 'ID') : null;
@@ -348,16 +394,11 @@ class Model_ParsecTest extends Model
 
     public function find_card_owner($card_dec)
     {
-        $sql = 'SELECT c.ID_PEP, p.GUID '
-             . 'FROM CARD c JOIN PEOPLE p ON p.ID_PEP = c.ID_PEP '
-             . 'WHERE c.ID_CARD = ' . (int) $card_dec;
+        $sql = 'SELECT ID_PEP FROM CARD WHERE ID_CARD = ' . (int) $card_dec;
+
         try {
-            $r = DB::query(Database::SELECT, $sql)->execute($this->_db)->as_array();
-            if (empty($r[0])) return null;
-            return array(
-                'id_pep'   => (int) Arr::get($r[0], 'ID_PEP'),
-                'pep_guid' => trim((string) Arr::get($r[0], 'GUID')),
-            );
+            $r = DB::query(Database::SELECT, $sql)->execute($this->_db)->get('ID_PEP');
+            return ($r !== null && $r !== false) ? (int) $r : null;
         } catch (Exception $e) {
             return null;
         }
@@ -380,11 +421,13 @@ class Model_ParsecTest extends Model
         $sql = 'SELECT ID_CARDINDEV, OPERATION, ID_CARD, ID_PEP, ATTEMPTS'
              . ' FROM CARDINDEV WHERE ID_CARDINDEV > ' . (int) $after_id
              . ' ORDER BY ID_CARDINDEV';
+
         try {
             $rows = DB::query(Database::SELECT, $sql)->execute($this->_db)->as_array();
         } catch (Exception $e) {
             return array();
         }
+
         $out = array();
         foreach ($rows as $r) {
             $out[] = array(
@@ -410,7 +453,9 @@ class Model_ParsecTest extends Model
         $v = (string) $v;
         if ($v !== '' && function_exists('mb_check_encoding') && mb_check_encoding($v, 'UTF-8')) {
             $conv = @iconv('UTF-8', 'windows-1251//TRANSLIT//IGNORE', $v);
-            if ($conv !== false) $v = $conv;
+            if ($conv !== false) {
+                $v = $conv;
+            }
         }
         return "'" . str_replace("'", "''", $v) . "'";
     }
