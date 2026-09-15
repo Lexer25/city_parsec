@@ -15,6 +15,7 @@ SET TERM ^ ;
 CREATE TRIGGER PARSEC_08_SS_ACCESSUSER_AD0 FOR SS_ACCESSUSER
 ACTIVE AFTER DELETE POSITION 0
 AS
+	DECLARE VARIABLE OP_DEL_ACCESS INTEGER = 8;
 begin
     -- выставлять комануд если категорию доступа принадлежит Парсеку
     if(EXISTS (
@@ -29,7 +30,7 @@ begin
           if(exists(select p.id_pep from people p where p.id_pep=old.id_pep)) then
            --выставлять команду если у пипла есть карта
                 if(exists(select c.id_card from card c where c.id_pep=old.id_pep)) then
-                    INSERT INTO cardindev (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (1,old.id_accessname,NULL,NULL,8,0,old.id_pep);
+                    INSERT INTO cardindev (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (old.id_db,old.id_accessname,NULL,NULL,:OP_DEL_ACCESS,0,old.id_pep);
 end
 ^
 

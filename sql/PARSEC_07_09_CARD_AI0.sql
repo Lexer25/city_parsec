@@ -15,21 +15,35 @@ SET TERM ^ ;
 CREATE TRIGGER PARSEC_07_09_CARD_AI0 FOR CARD
 ACTIVE AFTER INSERT POSITION 0
 AS
-declare variable id_accessname integer;
+	declare variable id_accessname integer;
+	DECLARE VARIABLE OP_ADD_IDENT INTEGER = 9;
+	DECLARE VARIABLE OP_ADD_ACCESS INTEGER = 7;
+	DECLARE VARIABLE ID_CARDTYPE INTEGER = 1;
 begin
     -- если у пипла уже есть категории доступа, то их надо присвоить выданной карте
-   if(new.id_cardtype =1 ) then
+   if(new.id_cardtype =:ID_CARDTYPE ) then
    begin 
-      INSERT INTO CARDINDEV (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (1,new.id_card,NULL,NULL,9,0,new.id_pep);
+      INSERT INTO CARDINDEV (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (new.id_db,new.id_card,NULL,NULL,:OP_ADD_IDENT,0,new.id_pep);
             if(exists(select ssu.id_accessuser from ss_accessuser ssu where ssu.id_pep=new.id_pep)) then
             begin
                 for select ssu2.id_accessname from ss_accessuser ssu2
-                where ssu2.id_accessname between 36 and 56
+               
+                where ssu2.id_accessname in (
+                select distinct a.id_accessname from access a
+				join accessname an on a.id_accessname=an.id_accessname
+				join device d2 on a.id_dev=d2.id_dev
+				join device d on d2.id_ctrl=d.id_ctrl
+				join server s on d.id_server=s.id_server
+				join servertypelist stl on s.id_server=stl.id_server
+				join servertype sst on stl.id_type=sst.id and sst.sname='parsec'
+				where d2.id_reader is not null
+				and a.id_accessname>1
+                )
                    and ssu2.id_pep=new.id_pep into :id_accessname
                 do
-                    --INSERT INTO CARDINDEV (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (1,new.id_card,NULL,NULL,11,0,:id_accessname);
+                   
                     --код операции 7 - добавить категорию доступа пиплу, и далее, через  него картам.
-                INSERT INTO CARDINDEV (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (1,:id_accessname,NULL,NULL,7,0,new.id_pep);
+                INSERT INTO CARDINDEV (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (new.id_db,:id_accessname,NULL,NULL,:OP_ADD_ACCESS,0,new.id_pep);
              end
   end
 
@@ -41,5 +55,5 @@ SET TERM ; ^
 
 DESCRIBE TRIGGER PARSEC_07_09_CARD_AI0
 'Добавление идентификатора пользователю. Если пользователю уже присвоены категории доступа, то эти категории доступа присваиваются и выданном идентификатору.
-ВРЕМЕННОЕ РЕШЕНИЕ: диапазон категорий доступа фиксированный!!! надо исправить на настраиваемый, привязанный к категориям доступа парсека.
+Внимание! контроллеры должны строго находится в транспортном сервере типа parsec! 
 ';

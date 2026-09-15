@@ -15,11 +15,13 @@ SET TERM ^ ;
 CREATE TRIGGER PARSEC_10_CARD_AD0 FOR CARD
 ACTIVE AFTER DELETE POSITION 0
 AS
+		DECLARE VARIABLE OP_DEL_IDENT INTEGER = 10;
+		DECLARE VARIABLE ID_CARDTYPE INTEGER = 1;
 begin
    --если пипл уже удален, то удалять карту не не надо. парсек сам удалит карту при удалдении пипла
    if(exists(select p.id_pep from people p where p.id_pep=old.id_pep)) then
-        if(old.id_cardtype=1) then 
-             INSERT INTO CARDINDEV (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (1,old.id_card,NULL,NULL,10,0,old.id_pep);
+        if(old.id_cardtype=:ID_CARDTYPE) then 
+             INSERT INTO CARDINDEV (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (old.id_db,old.id_card,NULL,NULL,:OP_DEL_IDENT,0,old.id_pep);
 end
 ^
 

@@ -15,6 +15,8 @@ SET TERM ^ ;
 CREATE TRIGGER PARSEC_07_SS_ACCESSUSER_AI0 FOR SS_ACCESSUSER
 ACTIVE AFTER INSERT POSITION 0
 AS
+		DECLARE VARIABLE OP_ADD_ACCESS INTEGER = 7;
+		DECLARE VARIABLE ID_CARDTYPE INTEGER = 1;
 begin
     -- выставлять комануд если категорию доступа принадлежит Парсеку
     if(EXISTS (
@@ -26,8 +28,8 @@ begin
         LEFT JOIN server s ON d2.id_server = s.id_server
         WHERE an.id_accessname = new.id_accessname AND s.id_server = 1 )) then
         --выставлять команду если у пипла есть карта
-            if(exists(select c.id_card from card c where c.id_pep=new.id_pep and c.id_cardtype=1 and c."ACTIVE">0)) then
-                    INSERT INTO cardindev (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (1,new.id_accessname,NULL,NULL,7,0,new.id_pep);
+            if(exists(select c.id_card from card c where c.id_pep=new.id_pep and c.id_cardtype=:ID_CARDTYPE and c."ACTIVE">0)) then
+                    INSERT INTO cardindev (ID_DB,ID_CARD,DEVIDX,ID_DEV,OPERATION,ATTEMPTS,ID_PEP) VALUES (new.id_db,new.id_accessname,NULL,NULL,:OP_ADD_ACCESS,0,new.id_pep);
 end
 ^
 
