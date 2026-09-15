@@ -1,0 +1,788 @@
+<style type="text/css">
+#kohana_error { background: #ddd; font-size: 1em; font-family:sans-serif; text-align: left; color: #111; }
+#kohana_error h1,
+#kohana_error h2 { margin: 0; padding: 1em; font-size: 1em; font-weight: normal; background: #911; color: #fff; }
+	#kohana_error h1 a,
+	#kohana_error h2 a { color: #fff; }
+#kohana_error h2 { background: #222; }
+#kohana_error h3 { margin: 0; padding: 0.4em 0 0; font-size: 1em; font-weight: normal; }
+#kohana_error p { margin: 0; padding: 0.2em 0; }
+#kohana_error a { color: #1b323b; }
+#kohana_error pre { overflow: auto; white-space: pre-wrap; }
+#kohana_error table { width: 100%; display: block; margin: 0 0 0.4em; padding: 0; border-collapse: collapse; background: #fff; }
+	#kohana_error table td { border: solid 1px #ddd; text-align: left; vertical-align: top; padding: 0.4em; }
+#kohana_error div.content { padding: 0.4em 1em 1em; overflow: hidden; }
+#kohana_error pre.source { margin: 0 0 1em; padding: 0.4em; background: #fff; border: dotted 1px #b7c680; line-height: 1.2em; }
+	#kohana_error pre.source span.line { display: block; }
+	#kohana_error pre.source span.highlight { background: #f0eb96; }
+		#kohana_error pre.source span.line span.number { color: #666; }
+#kohana_error ol.trace { display: block; margin: 0 0 0 2em; padding: 0; list-style: decimal; }
+	#kohana_error ol.trace li { margin: 0; padding: 0; }
+.js .collapsed { display: none; }
+</style>
+<script type="text/javascript">
+document.documentElement.className = document.documentElement.className + ' js';
+function koggle(elem)
+{
+	elem = document.getElementById(elem);
+
+	if (elem.style && elem.style['display'])
+		// Only works with the "style" attr
+		var disp = elem.style['display'];
+	else if (elem.currentStyle)
+		// For MSIE, naturally
+		var disp = elem.currentStyle['display'];
+	else if (window.getComputedStyle)
+		// For most other browsers
+		var disp = document.defaultView.getComputedStyle(elem, null).getPropertyValue('display');
+
+	// Toggle the state of the "display" style
+	elem.style.display = disp == 'block' ? 'none' : 'block';
+	return false;
+}
+</script>
+<div id="kohana_error">
+	<h1><span class="type">ErrorException [ Parse Error ]:</span> <span class="message">syntax error, unexpected &#039;,&#039;</span></h1>
+	<div id="error6aa98257bb74a" class="content">
+		<p><span class="file">MODPATH\parsec\classes\Task\parsecTestTriggers.php [ 79 ]</span></p>
+		<pre class="source"><code><span class="line"><span class="number">74</span> 
+</span><span class="line"><span class="number">75</span>         $this-&gt;_base_ci_id = $this-&gt;_get_max_cardindev_id();
+</span><span class="line"><span class="number">76</span> 
+</span><span class="line"><span class="number">77</span>         $this-&gt;_print_header($scenario);
+</span><span class="line"><span class="number">78</span> 
+</span><span class="line highlight"><span class="number">79</span>         foreach ($scenario['steps'], as $step) {
+</span><span class="line"><span class="number">80</span> 			
+</span><span class="line"><span class="number">81</span>             $this-&gt;_step_num++;
+</span><span class="line"><span class="number">82</span>             $this-&gt;_run_step($step, $verbose);
+</span><span class="line"><span class="number">83</span>         }
+</span><span class="line"><span class="number">84</span> 
+</span></code></pre>		<ol class="trace">
+					<li>
+				<p>
+					<span class="file">
+													{PHP internal call}
+											</span>
+					&raquo;
+					Kohana_Core::shutdown_handler()
+				</p>
+											</li>
+							</ol>
+	</div>
+	<h2><a href="#error6aa98257bb74aenvironment" onclick="return koggle('error6aa98257bb74aenvironment')">Environment</a></h2>
+	<div id="error6aa98257bb74aenvironment" class="content collapsed">
+				<h3><a href="#error6aa98257bb74aenvironment_included" onclick="return koggle('error6aa98257bb74aenvironment_included')">Included files</a> (109)</h3>
+		<div id="error6aa98257bb74aenvironment_included" class="collapsed">
+			<table cellspacing="0">
+								<tr>
+					<td><code>MODPATH\minion\minion</code></td>
+				</tr>
+								<tr>
+					<td><code>DOCROOT\index.php</code></td>
+				</tr>
+								<tr>
+					<td><code>APPPATH\bootstrap.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Core.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\I18n.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\I18n.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Exception.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Kohana\Exception.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Log.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Log.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Config.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Config.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Config\File.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Config\File.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Config\File\Reader.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Config\Reader.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Config\Source.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\baseref\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Arr.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Arr.php</code></td>
+				</tr>
+								<tr>
+					<td><code>APPPATH\config\adm.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Config\Group.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Config\Group.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Route.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Route.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\userguide\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\floorplan\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\ts\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\holiday\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\email\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\people\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\dashboard\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\minion\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\image\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\database\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\cache\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\auth\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\basis\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\userguide\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>APPPATH\config\userguide.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\basis\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\basis\config\menu.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\dashboard\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\events\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\people\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\door\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\email\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\eximdata\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\dev\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\apb\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\identifier\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\parsec\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\setting\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\setting\config\setting.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\about\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\dbsetting\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\eventConfig\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\log\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\bas\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\accessCategory\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\holiday\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\timezone\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\ts\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\devices\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\monitors\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\devgroup\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\floorplan\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\testartonit\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\mancard\init.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\log\classes\Log\File.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Log\File.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Log\Writer.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Log\Writer.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Cookie.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Cookie.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\minion\classes\Minion\Task.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\minion\classes\Kohana\Minion\Task.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\minion\classes\Minion\Exception.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\minion\classes\Kohana\Minion\Exception.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\minion\classes\Minion\CLI.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\minion\classes\Kohana\Minion\CLI.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Debug.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Debug.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Date.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\Date.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\View.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\View.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Response.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\basis\classes\Kohana\Response.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\HTTP\Response.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\HTTP\Response.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\HTTP\Message.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\HTTP\Message.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\HTTP\Header.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\classes\Kohana\HTTP\Header.php</code></td>
+				</tr>
+								<tr>
+					<td><code>SYSPATH\views\kohana\error.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\monitors\i18n\ru\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\mancard\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\setting\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\parsec\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\identifier\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\eximdata\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\door\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\people\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\events\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>MODPATH\basis\i18n\ru.php</code></td>
+				</tr>
+								<tr>
+					<td><code>APPPATH\i18n\ru.php</code></td>
+				</tr>
+							</table>
+		</div>
+				<h3><a href="#error6aa98257bb74aenvironment_loaded" onclick="return koggle('error6aa98257bb74aenvironment_loaded')">Loaded extensions</a> (48)</h3>
+		<div id="error6aa98257bb74aenvironment_loaded" class="collapsed">
+			<table cellspacing="0">
+								<tr>
+					<td><code>Core</code></td>
+				</tr>
+								<tr>
+					<td><code>bcmath</code></td>
+				</tr>
+								<tr>
+					<td><code>calendar</code></td>
+				</tr>
+								<tr>
+					<td><code>ctype</code></td>
+				</tr>
+								<tr>
+					<td><code>date</code></td>
+				</tr>
+								<tr>
+					<td><code>ereg</code></td>
+				</tr>
+								<tr>
+					<td><code>filter</code></td>
+				</tr>
+								<tr>
+					<td><code>ftp</code></td>
+				</tr>
+								<tr>
+					<td><code>hash</code></td>
+				</tr>
+								<tr>
+					<td><code>iconv</code></td>
+				</tr>
+								<tr>
+					<td><code>json</code></td>
+				</tr>
+								<tr>
+					<td><code>mcrypt</code></td>
+				</tr>
+								<tr>
+					<td><code>SPL</code></td>
+				</tr>
+								<tr>
+					<td><code>odbc</code></td>
+				</tr>
+								<tr>
+					<td><code>pcre</code></td>
+				</tr>
+								<tr>
+					<td><code>Reflection</code></td>
+				</tr>
+								<tr>
+					<td><code>session</code></td>
+				</tr>
+								<tr>
+					<td><code>standard</code></td>
+				</tr>
+								<tr>
+					<td><code>mysqlnd</code></td>
+				</tr>
+								<tr>
+					<td><code>tokenizer</code></td>
+				</tr>
+								<tr>
+					<td><code>zip</code></td>
+				</tr>
+								<tr>
+					<td><code>zlib</code></td>
+				</tr>
+								<tr>
+					<td><code>libxml</code></td>
+				</tr>
+								<tr>
+					<td><code>dom</code></td>
+				</tr>
+								<tr>
+					<td><code>PDO</code></td>
+				</tr>
+								<tr>
+					<td><code>bz2</code></td>
+				</tr>
+								<tr>
+					<td><code>SimpleXML</code></td>
+				</tr>
+								<tr>
+					<td><code>wddx</code></td>
+				</tr>
+								<tr>
+					<td><code>xml</code></td>
+				</tr>
+								<tr>
+					<td><code>xmlreader</code></td>
+				</tr>
+								<tr>
+					<td><code>xmlwriter</code></td>
+				</tr>
+								<tr>
+					<td><code>win32service</code></td>
+				</tr>
+								<tr>
+					<td><code>openssl</code></td>
+				</tr>
+								<tr>
+					<td><code>curl</code></td>
+				</tr>
+								<tr>
+					<td><code>fileinfo</code></td>
+				</tr>
+								<tr>
+					<td><code>gd</code></td>
+				</tr>
+								<tr>
+					<td><code>gettext</code></td>
+				</tr>
+								<tr>
+					<td><code>mbstring</code></td>
+				</tr>
+								<tr>
+					<td><code>exif</code></td>
+				</tr>
+								<tr>
+					<td><code>mysql</code></td>
+				</tr>
+								<tr>
+					<td><code>mysqli</code></td>
+				</tr>
+								<tr>
+					<td><code>pdo_mysql</code></td>
+				</tr>
+								<tr>
+					<td><code>PDO_ODBC</code></td>
+				</tr>
+								<tr>
+					<td><code>pdo_sqlite</code></td>
+				</tr>
+								<tr>
+					<td><code>soap</code></td>
+				</tr>
+								<tr>
+					<td><code>sockets</code></td>
+				</tr>
+								<tr>
+					<td><code>Phar</code></td>
+				</tr>
+								<tr>
+					<td><code>mhash</code></td>
+				</tr>
+							</table>
+		</div>
+																<h3><a href="#error6aa98257bb74aenvironment_server" onclick="return koggle('error6aa98257bb74aenvironment_server')">$_SERVER</a></h3>
+		<div id="error6aa98257bb74aenvironment_server" class="collapsed">
+			<table cellspacing="0">
+								<tr>
+					<td><code>ALLUSERSPROFILE</code></td>
+					<td><pre><small>string</small><span>(14)</span> "C:\ProgramData"</pre></td>
+				</tr>
+								<tr>
+					<td><code>APPDATA</code></td>
+					<td><pre><small>string</small><span>(25)</span> "C:\Users\\AppData\Roaming"</pre></td>
+				</tr>
+								<tr>
+					<td><code>CommonProgramFiles</code></td>
+					<td><pre><small>string</small><span>(35)</span> "C:\Program Files (x86)\Common Files"</pre></td>
+				</tr>
+								<tr>
+					<td><code>CommonProgramFiles(x86)</code></td>
+					<td><pre><small>string</small><span>(35)</span> "C:\Program Files (x86)\Common Files"</pre></td>
+				</tr>
+								<tr>
+					<td><code>CommonProgramW6432</code></td>
+					<td><pre><small>string</small><span>(29)</span> "C:\Program Files\Common Files"</pre></td>
+				</tr>
+								<tr>
+					<td><code>COMPOSER_HOME</code></td>
+					<td><pre><small>string</small><span>(17)</span> "C:\composer_cache"</pre></td>
+				</tr>
+								<tr>
+					<td><code>COMPUTERNAME</code></td>
+					<td><pre><small>string</small><span>(5)</span> "HONOR"</pre></td>
+				</tr>
+								<tr>
+					<td><code>ComSpec</code></td>
+					<td><pre><small>string</small><span>(27)</span> "C:\Windows\system32\cmd.exe"</pre></td>
+				</tr>
+								<tr>
+					<td><code>DriverData</code></td>
+					<td><pre><small>string</small><span>(38)</span> "C:\Windows\System32\Drivers\DriverData"</pre></td>
+				</tr>
+								<tr>
+					<td><code>EFC_12236_1592913036</code></td>
+					<td><pre><small>string</small><span>(1)</span> "1"</pre></td>
+				</tr>
+								<tr>
+					<td><code>EFC_12236_2946480783</code></td>
+					<td><pre><small>string</small><span>(1)</span> "1"</pre></td>
+				</tr>
+								<tr>
+					<td><code>EFC_12236_4126798990</code></td>
+					<td><pre><small>string</small><span>(1)</span> "1"</pre></td>
+				</tr>
+								<tr>
+					<td><code>EMAIL</code></td>
+					<td><pre><small>string</small><span>(20)</span> "D:\UserData\The Bat!"</pre></td>
+				</tr>
+								<tr>
+					<td><code>GUARDANT_SDK</code></td>
+					<td><pre><small>string</small><span>(37)</span> "C:\Program Files (x86)\Guardant\SDK7\"</pre></td>
+				</tr>
+								<tr>
+					<td><code>GUARDANT_SLK</code></td>
+					<td><pre><small>string</small><span>(55)</span> "C:\Program Files (x86)\Guardant\Software Licensing Kit\"</pre></td>
+				</tr>
+								<tr>
+					<td><code>HOMEDRIVE</code></td>
+					<td><pre><small>string</small><span>(2)</span> "C:"</pre></td>
+				</tr>
+								<tr>
+					<td><code>HOMEPATH</code></td>
+					<td><pre><small>string</small><span>(7)</span> "\Users\"</pre></td>
+				</tr>
+								<tr>
+					<td><code>LOCALAPPDATA</code></td>
+					<td><pre><small>string</small><span>(23)</span> "C:\Users\\AppData\Local"</pre></td>
+				</tr>
+								<tr>
+					<td><code>LOGONSERVER</code></td>
+					<td><pre><small>string</small><span>(7)</span> "\\HONOR"</pre></td>
+				</tr>
+								<tr>
+					<td><code>NUMBER_OF_PROCESSORS</code></td>
+					<td><pre><small>string</small><span>(2)</span> "16"</pre></td>
+				</tr>
+								<tr>
+					<td><code>OneDrive</code></td>
+					<td><pre><small>string</small><span>(18)</span> "C:\Users\\OneDrive"</pre></td>
+				</tr>
+								<tr>
+					<td><code>OS</code></td>
+					<td><pre><small>string</small><span>(10)</span> "Windows_NT"</pre></td>
+				</tr>
+								<tr>
+					<td><code>Path</code></td>
+					<td><pre><small>string</small><span>(720)</span> "C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\&nbsp;&hellip;"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PATHEXT</code></td>
+					<td><pre><small>string</small><span>(53)</span> ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PHP</code></td>
+					<td><pre><small>string</small><span>(12)</span> "C:\xampp\php"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PROCESSOR_ARCHITECTURE</code></td>
+					<td><pre><small>string</small><span>(3)</span> "x86"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PROCESSOR_ARCHITEW6432</code></td>
+					<td><pre><small>string</small><span>(5)</span> "AMD64"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PROCESSOR_IDENTIFIER</code></td>
+					<td><pre><small>string</small><span>(50)</span> "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PROCESSOR_LEVEL</code></td>
+					<td><pre><small>string</small><span>(2)</span> "25"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PROCESSOR_REVISION</code></td>
+					<td><pre><small>string</small><span>(4)</span> "7502"</pre></td>
+				</tr>
+								<tr>
+					<td><code>ProgramData</code></td>
+					<td><pre><small>string</small><span>(14)</span> "C:\ProgramData"</pre></td>
+				</tr>
+								<tr>
+					<td><code>ProgramFiles</code></td>
+					<td><pre><small>string</small><span>(22)</span> "C:\Program Files (x86)"</pre></td>
+				</tr>
+								<tr>
+					<td><code>ProgramFiles(x86)</code></td>
+					<td><pre><small>string</small><span>(22)</span> "C:\Program Files (x86)"</pre></td>
+				</tr>
+								<tr>
+					<td><code>ProgramW6432</code></td>
+					<td><pre><small>string</small><span>(16)</span> "C:\Program Files"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PROMPT</code></td>
+					<td><pre><small>string</small><span>(4)</span> "$P$G"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PSModulePath</code></td>
+					<td><pre><small>string</small><span>(93)</span> "C:\Program Files\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PUBLIC</code></td>
+					<td><pre><small>string</small><span>(15)</span> "C:\Users\Public"</pre></td>
+				</tr>
+								<tr>
+					<td><code>SESSIONNAME</code></td>
+					<td><pre><small>string</small><span>(7)</span> "Console"</pre></td>
+				</tr>
+								<tr>
+					<td><code>SystemDrive</code></td>
+					<td><pre><small>string</small><span>(2)</span> "C:"</pre></td>
+				</tr>
+								<tr>
+					<td><code>SystemRoot</code></td>
+					<td><pre><small>string</small><span>(10)</span> "C:\Windows"</pre></td>
+				</tr>
+								<tr>
+					<td><code>TEMP</code></td>
+					<td><pre><small>string</small><span>(7)</span> "C:\temp"</pre></td>
+				</tr>
+								<tr>
+					<td><code>TMP</code></td>
+					<td><pre><small>string</small><span>(7)</span> "C:\temp"</pre></td>
+				</tr>
+								<tr>
+					<td><code>USERDOMAIN</code></td>
+					<td><pre><small>string</small><span>(5)</span> "HONOR"</pre></td>
+				</tr>
+								<tr>
+					<td><code>USERDOMAIN_ROAMINGPROFILE</code></td>
+					<td><pre><small>string</small><span>(5)</span> "HONOR"</pre></td>
+				</tr>
+								<tr>
+					<td><code>USERNAME</code></td>
+					<td><pre><small>string</small><span>(0)</span> ""</pre></td>
+				</tr>
+								<tr>
+					<td><code>USERPROFILE</code></td>
+					<td><pre><small>string</small><span>(9)</span> "C:\Users\"</pre></td>
+				</tr>
+								<tr>
+					<td><code>windir</code></td>
+					<td><pre><small>string</small><span>(10)</span> "C:\Windows"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PHP_SELF</code></td>
+					<td><pre><small>string</small><span>(42)</span> "c:\xampp\htdocs\city\modules\minion\minion"</pre></td>
+				</tr>
+								<tr>
+					<td><code>SCRIPT_NAME</code></td>
+					<td><pre><small>string</small><span>(42)</span> "c:\xampp\htdocs\city\modules\minion\minion"</pre></td>
+				</tr>
+								<tr>
+					<td><code>SCRIPT_FILENAME</code></td>
+					<td><pre><small>string</small><span>(42)</span> "c:\xampp\htdocs\city\modules\minion\minion"</pre></td>
+				</tr>
+								<tr>
+					<td><code>PATH_TRANSLATED</code></td>
+					<td><pre><small>string</small><span>(42)</span> "c:\xampp\htdocs\city\modules\minion\minion"</pre></td>
+				</tr>
+								<tr>
+					<td><code>DOCUMENT_ROOT</code></td>
+					<td><pre><small>string</small><span>(0)</span> ""</pre></td>
+				</tr>
+								<tr>
+					<td><code>REQUEST_TIME_FLOAT</code></td>
+					<td><pre><small>float</small> 1789493847.6631</pre></td>
+				</tr>
+								<tr>
+					<td><code>REQUEST_TIME</code></td>
+					<td><pre><small>integer</small> 1789493847</pre></td>
+				</tr>
+								<tr>
+					<td><code>argv</code></td>
+					<td><pre><small>array</small><span>(3)</span> <span>(
+    0 => <small>string</small><span>(42)</span> "c:\xampp\htdocs\city\modules\minion\minion"
+    1 => <small>string</small><span>(25)</span> "--task=parsecTestTriggers"
+    2 => <small>string</small><span>(11)</span> "--cleanup=0"
+)</span></pre></td>
+				</tr>
+								<tr>
+					<td><code>argc</code></td>
+					<td><pre><small>integer</small> 3</pre></td>
+				</tr>
+							</table>
+		</div>
+			</div>
+</div>

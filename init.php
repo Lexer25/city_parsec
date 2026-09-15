@@ -25,3 +25,10 @@ Kohana::$config->load('menu')
 			
         )
     ));
+	
+	
+Route::set('parsec_test', 'parsectest(/<action>)')
+    ->defaults(array(
+        'controller' => 'ParsecTest',
+        'action'     => 'index',
+    ));
