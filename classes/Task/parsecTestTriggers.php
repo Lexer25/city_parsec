@@ -3,17 +3,8 @@
 /**
  * Прогонщик тестовых сценариев Parsec.
  *
- * Не делает DML напрямую — все операции выполняются через
- * HMVC-вызовы Controller_ParsecTest (parsectest/<action>).
- *
- * Параметры передаются через query string — это гарантированно
- * доходит до контроллера (в отличие от подмены $_POST).
- *
- * Запуск:
- *   minion --task=parsecTestTriggers
- *   minion --task=parsecTestTriggers --cleanup=0
- *   minion --task=parsecTestTriggers --scenario=/path/to/scenario.json
- *   minion --task=parsecTestTriggers --list
+ * Вызывает методы Model_ParsecTest напрямую — без HMVC, без JSON,
+ * без подмены $_GET/$_POST.
  */
 class Task_parsecTestTriggers extends Minion_Task
 {
@@ -24,20 +15,14 @@ class Task_parsecTestTriggers extends Minion_Task
         'list'     => 0,
     );
 
+    /** @var Model_ParsecTest */
+    protected $_model;
+
     protected $_suffix   = '';
     protected $_step_num = 0;
     protected $_ctx      = array();
 
-    protected $_stats = array(
-        'steps'  => 0,
-        'passed' => 0,
-        'failed' => 0,
-        'errors' => 0,
-    );
-
-    // =================================================================
-    // Точка входа
-    // =================================================================
+    protected $_stats = array('steps' => 0, 'passed' => 0, 'failed' => 0, 'errors' => 0);
 
     protected function _execute(array $params)
     {
@@ -50,12 +35,11 @@ class Task_parsecTestTriggers extends Minion_Task
         $do_cleanup    = (int)    Arr::get($params, 'cleanup', 1) === 1;
         $verbose       = (int)    Arr::get($params, 'verbose', 1) === 1;
 
+        $this->_model  = new Model_ParsecTest();
         $this->_suffix = date('YmdHis') . '_' . mt_rand(1000, 9999);
 
         $scenario = $this->_load_scenario($scenario_name);
-        if ($scenario === null) {
-            return;
-        }
+        if ($scenario === null) return;
 
         $this->_print_header($scenario, $do_cleanup);
 
@@ -68,63 +52,20 @@ class Task_parsecTestTriggers extends Minion_Task
 
         if ($do_cleanup) {
             Minion_CLI::write('');
-            Minion_CLI::write('=== ОЧИСТКА (parsectest/cleanup) ===');
-            $res = $this->_call('cleanup', array('prefix' => 'TEST-'));
-            if (!empty($res['ok'])) {
-                foreach ((array) Arr::get($res, 'deleted', array()) as $k => $v) {
+            Minion_CLI::write('=== ОЧИСТКА ===');
+            $r = $this->_model->cleanup(array('prefix' => 'TEST-'));
+            if (!empty($r['ok'])) {
+                foreach ((array) $r['deleted'] as $k => $v) {
                     Minion_CLI::write('  ' . $k . ': ' . (is_scalar($v) ? $v : json_encode($v)));
                 }
             } else {
-                Minion_CLI::write('  ошибка: ' . $this->_utf8_to_cp1251(Arr::get($res, 'error', '?')));
+                Minion_CLI::write('  ошибка: ' . $this->_utf8_to_cp1251(Arr::get($r, 'error', '?')));
             }
         } else {
             Minion_CLI::write('');
             Minion_CLI::write('Очистка пропущена (--cleanup=0). Суффикс: ' . $this->_suffix);
         }
     }
-
-    // =================================================================
-    // HMVC-вызов действия контроллера
-    // =================================================================
-
-    /**
-     * Вызывает parsectest/<action>, передавая параметры через query string.
-     * Возвращает декодированный JSON или массив с error.
-     */
-    protected function _call($action, array $params = array())
-{
-    try {
-        $request = Request::factory('parsectest/' . $action);
-
-        // Заполняем query и post прямо у объекта Request — это работает
-        // и в HMVC, и снаружи, и не зависит от суперглобалов.
-        foreach ($params as $k => $v) {
-            $request->query($k, $v);
-            $request->post($k, $v);
-        }
-
-        $response = $request->execute();
-    } catch (Exception $e) {
-        return array(
-            'ok'    => false,
-            'error' => 'HMVC ' . $action . ': ' . $e->getMessage(),
-        );
-    }
-
-    $status = $response->status();
-    $body   = (string) $response->body();
-    $data   = json_decode($body, true);
-
-    if (!is_array($data)) {
-        return array(
-            'ok'    => false,
-            'error' => 'Не JSON от ' . $action
-                     . ' (status=' . $status . ', len=' . strlen($body) . ')'
-                     . ($body !== '' ? ': ' . substr($body, 0, 300) : ''),
-        );
-    }
-    return $data;
-}
 
     // =================================================================
     // Один шаг
@@ -134,21 +75,30 @@ class Task_parsecTestTriggers extends Minion_Task
     {
         $this->_stats['steps']++;
 
-        $step_id    = isset($step['id']) ? $step['id'] : ('step' . $this->_step_num);
+        $step_id    = isset($step['id'])          ? $step['id']          : ('step' . $this->_step_num);
         $desc       = isset($step['description']) ? $step['description'] : '';
-        $action     = isset($step['action']) ? $step['action'] : '';
-        $params     = isset($step['params']) ? $step['params'] : array();
-        $expect_ops = isset($step['expect_ops']) ? $step['expect_ops'] : array();
+        $method     = isset($step['action'])      ? $step['action']      : '';
+        $params     = isset($step['params'])      ? $step['params']      : array();
+        $expect_ops = isset($step['expect_ops'])  ? $step['expect_ops']  : array();
 
         Minion_CLI::write(sprintf('[%d] %s — %s', $this->_step_num, $step_id, $desc));
-        Minion_CLI::write('    HMVC: parsectest/' . $action);
+        Minion_CLI::write('    Model_ParsecTest::' . $method . '()');
 
-        // Подстановка {suffix}, {cardnum}, {ctx.step.field} — без перекодировки.
-        // Контроллер сам сделает UTF-8 > CP1251 перед INSERT.
+        // Подстановка плейсхолдеров
         $params = $this->_substitute($params);
 
-        // Вызов контроллера
-        $result = $this->_call($action, $params);
+        if ($verbose) {
+            Minion_CLI::write('    PARAMS: ' . json_encode($params, JSON_UNESCAPED_UNICODE));
+        }
+
+        if (!method_exists($this->_model, $method)) {
+            $this->_stats['errors']++;
+            Minion_CLI::write('    ? ОШИБКА: Метод ' . $method . ' не найден в модели');
+            Minion_CLI::write('');
+            return;
+        }
+
+        $result = $this->_model->$method($params);
         $this->_ctx[$step_id] = $result;
 
         if (empty($result['ok'])) {
@@ -159,14 +109,12 @@ class Task_parsecTestTriggers extends Minion_Task
             return;
         }
 
-        // Печать ключевых полей
-        foreach (array('id_org', 'id_pep', 'card', 'accessname_id') as $k) {
+        foreach (array('id_org', 'id_pep', 'card', 'card_hex', 'accessname_id') as $k) {
             if (isset($result[$k]) && $result[$k] !== '') {
                 Minion_CLI::write('    ' . $k . ' = ' . $result[$k]);
             }
         }
 
-        // Разбор новых записей CARDINDEV
         $ops = array();
         $new = (array) Arr::get($result, 'cardindev_new', array());
         Minion_CLI::write('    Новых записей CARDINDEV: ' . count($new));
@@ -181,12 +129,9 @@ class Task_parsecTestTriggers extends Minion_Task
             $ops[] = (int) Arr::get($ci, 'operation');
         }
 
-        // Проверка ожиданий
         if (!empty($expect_ops)) {
-            $e = $expect_ops;
-            $a = $ops;
-            sort($e);
-            sort($a);
+            $e = $expect_ops; sort($e);
+            $a = $ops;        sort($a);
 
             if ($e === $a) {
                 $this->_stats['passed']++;
@@ -200,26 +145,21 @@ class Task_parsecTestTriggers extends Minion_Task
             $this->_stats['passed']++;
             Minion_CLI::write('    ?  (без проверки)');
         }
-
         Minion_CLI::write('');
     }
 
     // =================================================================
-    // Подстановка {suffix}, {ts}, {uniq}, {cardnum}, {ctx.step.field}
+    // Подстановка
     // =================================================================
 
     protected function _substitute($data)
     {
         if (is_array($data)) {
             $out = array();
-            foreach ($data as $k => $v) {
-                $out[$k] = $this->_substitute($v);
-            }
+            foreach ($data as $k => $v) $out[$k] = $this->_substitute($v);
             return $out;
         }
-        if (is_string($data)) {
-            return $this->_substitute_str($data);
-        }
+        if (is_string($data)) return $this->_substitute_str($data);
         return $data;
     }
 
@@ -236,63 +176,44 @@ class Task_parsecTestTriggers extends Minion_Task
                 $field = $m[2][$i];
                 $val   = array_key_exists($sid, $this->_ctx)
                       && array_key_exists($field, (array) $this->_ctx[$sid])
-                         ? $this->_ctx[$sid][$field]
-                         : '';
+                         ? $this->_ctx[$sid][$field] : '';
                 $str = str_replace($ph, $val, $str);
             }
         }
         return $str;
     }
 
-    // =================================================================
-    // Кодировки
-    // =================================================================
+    protected function _random_card()
+    {
+        return mt_rand(1, 16777215);   // 0xFFFFFF
+    }
 
-    /**
-     * UTF-8 > CP1251 (для печати в консоль Windows, где файл в CP1251).
-     */
     protected function _utf8_to_cp1251($s)
     {
         $s = (string) $s;
-        if ($s === '') {
-            return $s;
-        }
-        if (function_exists('mb_check_encoding') && !mb_check_encoding($s, 'UTF-8')) {
-            return $s;   // уже CP1251
-        }
+        if ($s === '') return $s;
+        if (function_exists('mb_check_encoding') && !mb_check_encoding($s, 'UTF-8')) return $s;
         $out = @iconv('UTF-8', 'windows-1251//TRANSLIT//IGNORE', $s);
         return ($out === false) ? $s : $out;
     }
 
     // =================================================================
-    // Сценарии
+    // Сценарии / печать — как было
     // =================================================================
 
     protected function _list_scenarios()
     {
         Minion_CLI::write('Встроенный сценарий: basic');
-        Minion_CLI::write('');
-        Minion_CLI::write('Внешние сценарии кладутся в:');
-        Minion_CLI::write('  ' . __DIR__ . DIRECTORY_SEPARATOR . 'scenarios/*.json');
     }
 
     protected function _load_scenario($name)
     {
-        if ($name === 'basic' || $name === '') {
-            return $this->_default_scenario();
-        }
+        if ($name === 'basic' || $name === '') return $this->_default_scenario();
 
-        $dir  = __DIR__ . DIRECTORY_SEPARATOR . 'scenarios';
-        $path = null;
-
-        if (file_exists($name)) {
-            $path = $name;
-        } else {
-            $candidate = $dir . DIRECTORY_SEPARATOR . $name . '.json';
-            if (file_exists($candidate)) {
-                $path = $candidate;
-            }
-        }
+        $dir = __DIR__ . DIRECTORY_SEPARATOR . 'scenarios';
+        $path = file_exists($name)
+              ? $name
+              : (file_exists($dir . '/' . $name . '.json') ? $dir . '/' . $name . '.json' : null);
 
         if ($path === null) {
             Minion_CLI::write('Сценарий не найден: ' . $name);
@@ -300,36 +221,18 @@ class Task_parsecTestTriggers extends Minion_Task
         }
 
         $json = @file_get_contents($path);
-        if ($json === false) {
-            Minion_CLI::write('Не удалось прочитать: ' . $path);
-            return null;
-        }
+        if ($json === false) { Minion_CLI::write('Не удалось прочитать: ' . $path); return null; }
 
-        $scenario = json_decode($json, true);
-        if (!is_array($scenario) || empty($scenario['steps'])) {
-            Minion_CLI::write('Некорректный JSON: ' . $path);
-            return null;
-        }
-
-        Minion_CLI::write('Загружен сценарий: ' . $path);
-        return $scenario;
+        $s = json_decode($json, true);
+        if (!is_array($s) || empty($s['steps'])) { Minion_CLI::write('Некорректный JSON'); return null; }
+        return $s;
     }
 
-    /**
-     * Встроенный сценарий.
-     *
-     * Формат шага:
-     *   id          — произвольный идентификатор (для {ctx.<id>.<field>})
-     *   description — описание для лога
-     *   action      — имя метода контроллера без префикса action_ (add_org и т.д.)
-     *   params      — POST/query-параметры, понимает {suffix}, {cardnum}, {ctx.step.field}
-     *   expect_ops  — ожидаемые коды операций в CARDINDEV после шага
-     */
     protected function _default_scenario()
     {
         return array(
             'name'        => 'Базовый тест триггеров',
-            'description' => 'Организация > персона > категория доступа > карта',
+            'description' => 'Организация > персона > карта > категория доступа',
             'steps'       => array(
                 array(
                     'id'          => 'org',
@@ -357,16 +260,6 @@ class Task_parsecTestTriggers extends Minion_Task
                     'expect_ops'  => array(3),
                 ),
                 array(
-                    'id'          => 'access',
-                    'description' => 'Выдать категорию доступа',
-                    'action'      => 'add_access',
-                    'params'      => array(
-                        'pep_guid'      => '{ctx.people.guid}',
-                        'accessname_id' => 64,
-                    ),
-                    'expect_ops'  => array(7),
-                ),
-                array(
                     'id'          => 'card',
                     'description' => 'Выдать карту',
                     'action'      => 'add_card',
@@ -376,20 +269,26 @@ class Task_parsecTestTriggers extends Minion_Task
                     ),
                     'expect_ops'  => array(9),
                 ),
+                array(
+                    'id'          => 'access',
+                    'description' => 'Выдать категорию доступа',
+                    'action'      => 'add_access',
+                    'params'      => array(
+                        'pep_guid'      => '{ctx.people.guid}',
+                        'accessname_id' => 64,
+                    ),
+                    'expect_ops'  => array(7),
+                ),
             ),
         );
     }
 
-    // =================================================================
-    // Печать
-    // =================================================================
-
     protected function _print_header($scenario, $do_cleanup)
     {
         Minion_CLI::write('====================================================');
-        Minion_CLI::write(' Тест триггеров Parsec (via HMVC)');
+        Minion_CLI::write(' Тест триггеров Parsec (direct model)');
         Minion_CLI::write('====================================================');
-        Minion_CLI::write('Сценарий:   ' . Arr::get($scenario, 'name', '(без имени)'));
+        Minion_CLI::write('Сценарий:   ' . Arr::get($scenario, 'name', '—'));
         Minion_CLI::write('Описание:   ' . Arr::get($scenario, 'description', '—'));
         Minion_CLI::write('Шагов:      ' . count($scenario['steps']));
         Minion_CLI::write('Суффикс:    ' . $this->_suffix);
@@ -414,15 +313,4 @@ class Task_parsecTestTriggers extends Minion_Task
                 : 'РЕЗУЛЬТАТ: FAIL'
         );
     }
-	
-	
-	
-	/**
- * Случайный номер карты в диапазоне 1 .. 0xFFFFFF (1..16777215).
- * Верхняя граница — 6 hex-символов "FFFFFF".
- */
-protected function _random_card()
-{
-    return mt_rand(1, 16777215);   // 0xFFFFFF
-}
 }
