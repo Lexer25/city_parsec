@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Модуль Parsec — задачи сверки</title>
+<title>Parsec — тестирование триггеров</title>
 <style>
-  /* ============ БАЗОВЫЕ СТИЛИ ============ */
   :root {
     --bg:        #f4f6f8;
     --panel:     #ffffff;
@@ -15,21 +14,16 @@
     --accent:    #0969da;
     --accent-bg: #ddf4ff;
     --code-bg:   #f6f8fa;
-    --code-text: #24292f;
     --thead-bg:  #eaeef2;
     --zebra:     #f6f8fa;
     --green:     #1a7f37;
     --red:       #cf222e;
     --orange:    #bc4c00;
   }
-
   * { box-sizing: border-box; }
-
   html { scroll-behavior: smooth; }
-
   body {
     margin: 0;
-    padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
                  "Helvetica Neue", Arial, "PT Sans", sans-serif;
     font-size: 15px;
@@ -37,24 +31,16 @@
     color: var(--text);
     background: var(--bg);
   }
-
-  .layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    min-height: 100vh;
-  }
-
-  /* ============ БОКОВАЯ НАВИГАЦИЯ ============ */
+  .layout { display: grid; grid-template-columns: 320px 1fr; min-height: 100vh; }
   aside {
     background: var(--panel);
     border-right: 1px solid var(--border);
-    padding: 24px 18px;
+    padding: 24px 18px 40px;
     position: sticky;
     top: 0;
     height: 100vh;
     overflow-y: auto;
   }
-
   aside h2 {
     font-size: 13px;
     text-transform: uppercase;
@@ -62,7 +48,6 @@
     color: var(--muted);
     margin: 0 0 12px;
   }
-
   aside .version {
     font-size: 12px;
     color: var(--muted);
@@ -70,55 +55,47 @@
     padding-bottom: 14px;
     border-bottom: 1px solid var(--border);
   }
-
-  nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  nav li { margin: 2px 0; }
-
+  nav ul { list-style: none; padding: 0; margin: 0; }
+  nav > ul > li { margin: 4px 0; }
   nav a {
     display: block;
-    padding: 6px 10px;
+    padding: 4px 10px;
     color: var(--text);
     text-decoration: none;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13.5px;
+    line-height: 1.35;
     border-left: 3px solid transparent;
     transition: background 0.12s, border-color 0.12s;
   }
-
   nav a:hover {
     background: var(--accent-bg);
     border-left-color: var(--accent);
     color: var(--accent);
   }
-
-  nav .sub a {
-    padding-left: 26px;
-    font-size: 13px;
+  nav ul ul { margin: 2px 0 6px 0; }
+  nav ul ul a {
+    padding-left: 24px;
+    font-size: 12.5px;
     color: var(--muted);
   }
-
-  /* ============ КОНТЕНТ ============ */
+  nav ul ul ul a {
+    padding-left: 38px;
+    font-size: 12px;
+  }
   main {
     padding: 40px 56px 80px;
     max-width: 1100px;
     background: var(--panel);
     min-height: 100vh;
   }
-
   main > *:first-child { margin-top: 0; }
-
   h1 {
     font-size: 28px;
     margin: 0 0 6px;
     padding-bottom: 12px;
     border-bottom: 2px solid var(--border);
   }
-
   h2 {
     font-size: 22px;
     margin: 44px 0 16px;
@@ -126,212 +103,217 @@
     border-bottom: 1px solid var(--border);
     scroll-margin-top: 20px;
   }
-
-  h3 {
-    font-size: 17px;
-    margin: 26px 0 10px;
-    scroll-margin-top: 20px;
-  }
-
-  h4 {
-    font-size: 15px;
-    margin: 18px 0 8px;
-    color: var(--muted);
-  }
-
+  h3 { font-size: 17px; margin: 26px 0 10px; scroll-margin-top: 20px; }
+  h4 { font-size: 15px; margin: 18px 0 8px; color: var(--muted); scroll-margin-top: 20px; }
   p { margin: 10px 0; }
-
-  .lead {
-    font-size: 16px;
-    color: var(--muted);
-    margin-bottom: 30px;
-  }
-
+  .lead { font-size: 16px; color: var(--muted); margin-bottom: 30px; }
   .meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    padding: 12px 16px;
-    background: var(--code-bg);
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 30px;
+    display: flex; flex-wrap: wrap; gap: 18px;
+    padding: 12px 16px; background: var(--code-bg); border-radius: 8px;
+    font-size: 13px; color: var(--muted); margin-bottom: 30px;
   }
-
   .meta strong { color: var(--text); }
-
-  /* ============ КОД ============ */
   code {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.88em;
-    background: var(--code-bg);
-    padding: 2px 6px;
+    font-size: 0.88em; background: var(--code-bg); padding: 2px 6px;
     border-radius: 4px;
-    color: var(--code-text);
   }
-
   pre {
-    background: var(--code-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 18px;
-    overflow-x: auto;
-    font-size: 13px;
-    line-height: 1.5;
-    margin: 12px 0;
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 18px; overflow-x: auto;
+    font-size: 13px; line-height: 1.5; margin: 12px 0;
   }
-
-  pre code {
-    background: none;
-    padding: 0;
-    font-size: inherit;
-  }
-
-  /* ============ ТАБЛИЦЫ ============ */
+  pre code { background: none; padding: 0; font-size: inherit; }
   table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 14px 0 22px;
-    font-size: 14px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
+    width: 100%; border-collapse: collapse; margin: 14px 0 22px;
+    font-size: 14px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
   }
-
-  thead {
-    background: var(--thead-bg);
-  }
-
+  thead { background: var(--thead-bg); }
   th, td {
-    text-align: left;
-    padding: 9px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
+    text-align: left; padding: 9px 14px;
+    border-bottom: 1px solid var(--border); vertical-align: top;
   }
-
-  th {
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--text);
-    white-space: nowrap;
-  }
-
+  th { font-weight: 600; font-size: 13px; }
   tbody tr:nth-child(even) { background: var(--zebra); }
   tbody tr:last-child td { border-bottom: none; }
-
   td code { white-space: nowrap; }
-
-  /* ============ БЛОКИ-ПРЕДУПРЕЖДЕНИЯ ============ */
   .callout {
-    border-left: 4px solid var(--accent);
-    background: var(--accent-bg);
-    padding: 12px 18px;
-    border-radius: 0 8px 8px 0;
-    margin: 16px 0;
+    border-left: 4px solid var(--accent); background: var(--accent-bg);
+    padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0;
     font-size: 14px;
   }
-
-  .callout.warn {
-    border-left-color: var(--orange);
-    background: #fff8c5;
-  }
-
-  .callout.danger {
-    border-left-color: var(--red);
-    background: #ffebe9;
-  }
-
-  .callout strong { display: inline; }
-
-  /* ============ СТАТУСЫ ============ */
+  .callout.warn { border-left-color: var(--orange); background: #fff8c5; }
+  .callout.danger { border-left-color: var(--red); background: #ffebe9; }
   .badge {
-    display: inline-block;
-    padding: 1px 8px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-family: monospace;
-    font-weight: 600;
+    display: inline-block; padding: 1px 8px; border-radius: 10px;
+    font-size: 12px; font-family: monospace; font-weight: 600;
   }
-
   .b-ok   { background: #dafbe1; color: var(--green); }
-  .b-warn { background: #fff1e5; color: var(--orange); }
   .b-err  { background: #ffebe9; color: var(--red); }
+  .b-warn { background: #fff1e5; color: var(--orange); }
   .b-info { background: var(--accent-bg); color: var(--accent); }
-
-  /* ============ ПРОЧЕЕ ============ */
-  hr {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 40px 0;
-  }
-
+  .b-req  { background: #ffe4e6; color: var(--red); }
+  .b-opt  { background: #eaeef2; color: var(--muted); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
   ul, ol { padding-left: 22px; margin: 10px 0; }
   li { margin: 4px 0; }
-
   .top-link {
-    display: block;
-    text-align: right;
-    font-size: 12px;
-    color: var(--muted);
-    text-decoration: none;
-    margin-top: 8px;
+    display: block; text-align: right; font-size: 12px;
+    color: var(--muted); text-decoration: none; margin-top: 8px;
   }
-
   .top-link:hover { color: var(--accent); }
-
-  /* ============ МОБИЛЬНЫЙ ============ */
+  .method-header {
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px;
+    margin: 26px 0 8px;
+  }
+  .method-header h3 { margin: 0; }
+  .method-header .method-badge {
+    font-family: monospace; font-size: 12px;
+    background: var(--accent-bg); color: var(--accent);
+    padding: 2px 8px; border-radius: 4px; font-weight: 600;
+  }
+  .method-header .method-trigger {
+    font-family: monospace; font-size: 12px;
+    background: #dafbe1; color: var(--green);
+    padding: 2px 8px; border-radius: 4px; font-weight: 600;
+  }
   @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; }
-    aside {
-      position: static;
-      height: auto;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-    }
+    aside { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
     main { padding: 24px 20px 60px; }
     h1 { font-size: 22px; }
     h2 { font-size: 18px; }
   }
-
-  /* ============ ПЕЧАТЬ ============ */
   @media print {
     aside { display: none; }
     .layout { display: block; }
     main { padding: 0; max-width: none; }
     pre, table { page-break-inside: avoid; }
   }
+  
+  #to-top {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+#to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+#to-top:hover {
+  background: #0757b8;
+}
+@media (min-width: 901px) {
+  #to-top { left: 336px; }  /* сдвигаем правее, чтобы не мешал сайдбару */
+}
 </style>
 </head>
 <body>
+<button id="to-top" title="Наверх (Home)">☰ Оглавление</button>
 <div class="layout">
 
-<!-- ======================= БОКОВАЯ НАВИГАЦИЯ ======================= -->
+<!-- ======================= ОГЛАВЛЕНИЕ ======================= -->
 <aside>
   <h2>Содержание</h2>
-  <div class="version">Версия 1.0 · 2026-09-14</div>
+  <div class="version">Версия 1.3 · 2026-09-17</div>
   <nav>
     <ul>
-      <li><a href="#intro">Общие сведения</a></li>
-      <li class="sub">
-        <a href="#intro-files">Расположение</a>
-        <a href="#intro-run">Шаблон запуска</a>
-        <a href="#intro-opts">Общие опции</a>
-        <a href="#intro-ops">Операции</a>
+      <li><a href="#arch">1. Архитектура</a>
+        <ul>
+          <li><a href="#arch-methods">1.1. Методы модели</a></li>
+        </ul>
       </li>
 
-      <li><a href="#task1">1. Сверка персон</a></li>
-      <li><a href="#task2">2. Сверка карт</a></li>
-      <li><a href="#task3">3. Сверка организаций</a></li>
-      <li><a href="#task4">4. Сверка категорий доступа</a></li>
+      <li><a href="#install">2. Установка</a>
+        <ul>
+          <li><a href="#install-route">2.1. Роут</a></li>
+          <li><a href="#install-module">2.2. Модуль подключён</a></li>
+          <li><a href="#install-bat">2.3. BAT-файл</a></li>
+        </ul>
+      </li>
 
-      <li><a href="#order">5. Порядок запуска</a></li>
-      <li><a href="#errors">6. Диагностика</a></li>
-      <li><a href="#mock">7. Mock-режим</a></li>
-      <li><a href="#integration">8. Интегратор</a></li>
-      <li><a href="#stop">9. Остановка прогона</a></li>
-      <li><a href="#history">10. Версии</a></li>
+      <li><a href="#rest">3. REST API</a>
+        <ul>
+          <li><a href="#rest-format">3.1. Общий формат ответа</a></li>
+          <li><a href="#rest-add-org">3.2. add_org</a></li>
+          <li><a href="#rest-add-person">3.3. add_person</a></li>
+          <li><a href="#rest-add-card">3.4. add_card</a></li>
+          <li><a href="#rest-add-access">3.5. add_access</a></li>
+          <li><a href="#rest-update-org">3.6. update_org</a></li>
+          <li><a href="#rest-update-person">3.7. update_person</a></li>
+          <li><a href="#rest-del-org">3.8. del_org</a></li>
+          <li><a href="#rest-del-person">3.9. del_person</a></li>
+          <li><a href="#rest-del-card">3.10. del_card</a></li>
+          <li><a href="#rest-del-access">3.11. del_access</a></li>
+          <li><a href="#rest-status">3.12. status</a></li>
+          <li><a href="#rest-cleanup">3.13. cleanup</a></li>
+          <li><a href="#rest-curl">3.14. Примеры curl</a></li>
+        </ul>
+      </li>
+
+      <li><a href="#task">4. Minion-таск</a>
+        <ul>
+          <li><a href="#task-run">4.1. Запуск</a></li>
+          <li><a href="#task-opts">4.2. Опции</a></li>
+        </ul>
+      </li>
+
+      <li><a href="#scenarios">5. Сценарии</a>
+        <ul>
+          <li><a href="#scenarios-format">5.1. Формат шага</a></li>
+          <li><a href="#scenarios-fields">5.2. Поля шага</a></li>
+          <li><a href="#scenarios-placeholders">5.3. Плейсхолдеры</a></li>
+          <li><a href="#scenarios-json">5.4. Правила JSON</a></li>
+        </ul>
+      </li>
+
+      <li><a href="#all-triggers">6. Полный тест всех триггеров</a>
+        <ul>
+          <li><a href="#all-triggers-file">6.1. Файл сценария</a></li>
+          <li><a href="#all-triggers-order">6.2. Порядок шагов</a></li>
+          <li><a href="#all-triggers-run">6.3. Запуск</a></li>
+          <li><a href="#all-triggers-output">6.4. Ожидаемый вывод</a></li>
+          <li><a href="#all-triggers-reqs">6.5. Требования</a></li>
+        </ul>
+      </li>
+
+      <li><a href="#ops">7. Справочник кодов операций</a></li>
+
+      <li><a href="#errors">8. Справочник кодов ошибок</a>
+        <ul>
+          <li><a href="#errors-create">8.1. Создание</a></li>
+          <li><a href="#errors-delete">8.2. Удаление</a></li>
+          <li><a href="#errors-update">8.3. Обновление</a></li>
+          <li><a href="#errors-service">8.4. Служебные</a></li>
+        </ul>
+      </li>
+
+      <li><a href="#diag">9. Диагностика</a>
+        <ul>
+          <li><a href="#diag-problems">9.1. Типовые проблемы</a></li>
+          <li><a href="#diag-cardindev">9.2. Проверка CARDINDEV</a></li>
+          <li><a href="#diag-triggers">9.3. Проверка триггеров</a></li>
+          <li><a href="#diag-integrator">9.4. Состояние интегратора</a></li>
+        </ul>
+      </li>
+
+      <li><a href="#see">10. См. также</a></li>
     </ul>
   </nav>
 </aside>
@@ -339,503 +321,982 @@
 <!-- ======================= КОНТЕНТ ======================= -->
 <main>
 
-<h1 id="top">Модуль Parsec — задачи сверки</h1>
-<p class="lead">Справочник по четырём Minion-задачам для сверки данных СКУД Артонит и СКУД Parsec.</p>
+<h1 id="top">Модуль Parsec — тестирование триггеров интеграции</h1>
+<p class="lead">Справочник по REST-API и Minion-таску для проверки срабатывания всех 10 триггеров интеграции Артонит → Parsec.</p>
 
 <div class="meta">
-  <span><strong>Версия:</strong> 1.0</span>
-  <span><strong>Дата:</strong> 2026-09-14</span>
+  <span><strong>Версия:</strong> 1.3</span>
+  <span><strong>Дата:</strong> 2026-09-17</span>
   <span><strong>Модуль:</strong> <code>parsec</code></span>
   <span><strong>Платформа:</strong> Kohana 3.3 · Minion · Firebird</span>
 </div>
 
-<!-- ============================================================= -->
-<h2 id="intro">0. Общие сведения</h2>
-
-<p>Все четыре задачи — это Minion-таски модуля <code>parsec</code>, запускаются
-из командной строки через <code>minion</code>. Используют SOAP-клиент
-<code>Model_Cch</code> (включая mock-режим), работают с БД Артонит через
-<code>Database::instance('fb')</code>. Лог — табличный, с разделителем
-табуляции.</p>
-
-<h3 id="intro-files">Расположение задач</h3>
-<pre><code>c:\xampp\htdocs\city\modules\parsec\classes\Task\
-├── parsecSyncPeope.php           (сверка персон)
-├── parsec_sync_identifiers.php   (сверка карт)
-├── parsecSyncOrg.php             (сверка дерева организаций)
-└── parsecSyncAccessGroups.php    (сверка категорий доступа)</code></pre>
-
-<h3 id="intro-run">Шаблон запуска</h3>
-<pre><code>chcp 65001
-c:\xampp\php\php.exe ^
-    c:\xampp\htdocs\city\modules\minion\minion ^
-    --task=&lt;ИМЯ_ЗАДАЧИ&gt; [опции] ^
-    &gt; &lt;файл_лога&gt;.log 2&gt;&amp;1</code></pre>
-
 <div class="callout">
-  <strong>Кодировка логов:</strong> все логи пишутся в Windows-1251.
-  Открывайте их в Notepad++ с кодировкой <code>Windows-1251</code>.
+  <strong>Что нового в 1.3:</strong> оглавление слева дополнено всеми подпунктами документа — теперь любой раздел доступен в один клик.
 </div>
 
-<h3 id="intro-opts">Общие опции (для всех задач)</h3>
-<table>
-  <thead>
-    <tr><th>Опция</th><th>По умолчанию</th><th>Описание</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><code>--add=1|0</code></td><td><code>0</code></td>
-        <td>Ставить ли задачи интегратору в <code>CARDINDEV</code></td></tr>
-    <tr><td><code>--limit=N</code></td><td><code>0</code></td>
-        <td>Ограничить количество проверяемых объектов</td></tr>
-    <tr><td><code>--verbose=1|0</code></td><td><code>1</code></td>
-        <td>Подробный вывод (0 — только итоги)</td></tr>
-  </tbody>
-</table>
+<!-- ================================================ -->
+<h2 id="arch">1. Архитектура</h2>
 
-<h4>Специфичные опции</h4>
-<table>
-  <thead>
-    <tr><th>Опция</th><th>Где применима</th><th>Описание</th></tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>--id_pep=N</code></td>
-      <td><code>parsecSyncPeope</code>,<br>
-          <code>parsec_sync_identifiers</code>,<br>
-          <code>parsecSyncAccessGroups</code></td>
-      <td>Проверить только одну персону</td>
-    </tr>
-    <tr>
-      <td><code>--id_org=N</code></td>
-      <td><code>parsecSyncOrg</code></td>
-      <td>Проверить только одну организацию</td>
-    </tr>
-  </tbody>
-</table>
+<p>Тестирование построено на трёх слоях. Логика живёт <strong>только</strong> в модели, контроллер и таск — тонкие обёртки.</p>
 
-<h3 id="intro-ops">Сводная таблица операций интегратора</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Model_ParsecTest                         │
+│  • Вся SQL-логика                                           │
+│  • Вся валидация                                            │
+│  • Все коды ошибок                                          │
+│  • Возвращает ассоциативные массивы, никакого вывода        │
+└─────────────────────────────────────────────────────────────┘
+              ▲                               ▲
+              │                               │
+┌─────────────┴──────────────┐   ┌────────────┴──────────────┐
+│  Controller_ParsecTest     │   │  Task_parsecTestTriggers  │
+│  • Разбор URL              │   │  • Читает сценарий        │
+│  • _param() POST → query   │   │  • Подстановка {…}        │
+│  • _to_utf8() + JSON       │   │  • Печать в консоль       │
+│  • HTML-форма (index)      │   │  • Сравнение ops          │
+└────────────────────────────┘   └───────────────────────────┘
+        HTTP / браузер                  CLI / Minion</code></pre>
+
+<h3 id="arch-methods">1.1. Методы модели</h3>
 <table>
   <thead>
-    <tr>
-      <th style="width:90px;">Операция</th>
-      <th>Что значит</th>
-      <th>Кто ставит</th>
-    </tr>
+    <tr><th>Метод</th><th>Триггер</th><th>Назначение</th></tr>
   </thead>
   <tbody>
-    <tr><td><strong>3</strong></td>  <td>Добавить пользователя</td>              <td><code>parsecSyncPeope</code></td></tr>
-    <tr><td><strong>5</strong></td>  <td>Добавить организацию</td>               <td><code>parsecSyncOrg</code></td></tr>
-    <tr><td><strong>7</strong></td>  <td>Добавить категорию доступа человеку</td><td><code>parsecSyncAccessGroups</code></td></tr>
-    <tr><td><strong>8</strong></td>  <td>Удалить категорию доступа человеку</td><td><code>parsecSyncAccessGroups</code></td></tr>
-    <tr><td><strong>9</strong></td>  <td>Добавить карту человеку</td>            <td><code>parsec_sync_identifiers</code></td></tr>
-    <tr><td><strong>10</strong></td> <td>Удалить карту у человека</td>           <td><code>parsec_sync_identifiers</code></td></tr>
-    <tr><td><strong>35</strong></td> <td>Изменить данные пользователя</td>       <td><code>parsecSyncPeope</code></td></tr>
-    <tr><td><strong>55</strong></td> <td>Изменить данные организации</td>        <td><code>parsecSyncOrg</code></td></tr>
+    <tr><td><code>add_org</code></td><td>5</td><td>Создать организацию</td></tr>
+    <tr><td><code>update_org</code></td><td>55</td><td>Изменить организацию</td></tr>
+    <tr><td><code>del_org</code></td><td>6</td><td>Удалить организацию</td></tr>
+    <tr><td><code>add_person</code></td><td>3</td><td>Создать персону</td></tr>
+    <tr><td><code>update_person</code></td><td>35</td><td>Изменить персону</td></tr>
+    <tr><td><code>del_person</code></td><td>4</td><td>Удалить персону</td></tr>
+    <tr><td><code>add_card</code></td><td>9</td><td>Выдать карту</td></tr>
+    <tr><td><code>del_card</code></td><td>10</td><td>Удалить карту</td></tr>
+    <tr><td><code>add_access</code></td><td>7</td><td>Выдать категорию доступа</td></tr>
+    <tr><td><code>del_access</code></td><td>8</td><td>Удалить категорию доступа</td></tr>
+    <tr><td><code>cleanup</code></td><td>—</td><td>Удалить тестовые данные</td></tr>
+    <tr><td><code>status</code></td><td>—</td><td>Последние записи CARDINDEV</td></tr>
   </tbody>
 </table>
 
 <a class="top-link" href="#top">↑ к оглавлению</a>
 
-<!-- ============================================================= -->
-<h2 id="task1">1. Сверка персон</h2>
+<!-- ================================================ -->
+<h2 id="install">2. Установка</h2>
 
-<table>
-  <tbody>
-    <tr><th style="width:180px;">Имя задачи</th>    <td><code>parsecSyncPeope</code></td></tr>
-    <tr><th>Файл</th>                                <td><code>Task/parsecSyncPeope.php</code></td></tr>
-    <tr><th>Класс</th>                               <td><code>Task_parsecSyncPeope</code></td></tr>
-    <tr><th>Что проверяет</th>                       <td>Наличие персон Артонит в Parsec и совпадение их организации</td></tr>
-  </tbody>
-</table>
+<h3 id="install-route">2.1. Роут</h3>
+<p>В <code>modules/parsec/init.php</code> (в конец файла):</p>
+<pre><code>Route::set('parsectest', 'parsectest(/&lt;action&gt;)')
+    -&gt;defaults(array(
+        'controller' =&gt; 'ParsecTest',
+        'action'     =&gt; 'index',
+    ));</code></pre>
 
-<h3>Что делает</h3>
-<ol>
-  <li>Берёт персон из Артонит (<code>PEOPLE.id_pep &gt; 1</code>, <code>guid</code> не пуст) вместе с их организацией.</li>
-  <li>По <code>guid</code> персоны вызывает <code>GetPerson(pep_guid)</code> в Parsec.</li>
-  <li>Если персоны нет — фиксирует <span class="badge b-warn">НЕТ В PARSEC</span>.</li>
-  <li>Если есть — сравнивает <code>ORG_ID</code> из Parsec с <code>ORGANIZATION.guid</code> персоны в Артонит.</li>
-  <li>Через <code>GetOrgUnit</code> получает название организации Parsec (с кэшем).</li>
-</ol>
+<h3 id="install-module">2.2. Модуль подключён</h3>
+<pre><code>Kohana::modules(array(
+    // ...
+    'parsec' =&gt; MODPATH.'parsec',
+    // ...
+));</code></pre>
 
-<h3>Задачи интегратору</h3>
-<table>
-  <thead>
-    <tr><th style="width:90px;">Операция</th><th>Когда ставится</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>3</strong></td>  <td>Персоны нет в Parsec — добавить пользователя</td></tr>
-    <tr><td><strong>35</strong></td> <td>Организация персоны в Parsec не совпадает с Артонит — изменить данные</td></tr>
-  </tbody>
-</table>
-
-<h3>Примеры запуска</h3>
-<pre><code>:: Одна персона, без задач
-... --task=parsecSyncPeope --id_pep=4 --add=0 &gt; sync_pep.log 2&gt;&amp;1
-
-:: Первые 100, без задач
-... --task=parsecSyncPeope --limit=100 --add=0 &gt; sync_pep.log 2&gt;&amp;1
-
-:: Полный прогон с постановкой задач
-... --task=parsecSyncPeope --add=1 &gt; sync_pep_all.log 2&gt;&amp;1</code></pre>
-
-<h3>Формат лога</h3>
-<pre><code>Счётчик  Статус         ФИО                 Artonit                         Parsec                          Примечание
-[1/10] id_pep=4 guid=...  РАСХОЖДЕНИЕ  Аветисян С, Г.  Artonit: &lt;guid&gt; (1 корпус)  Parsec: &lt;guid&gt; (ООО Ромашка)
-[2/10] id_pep=5 guid=...  OK           Авилкина М. В.  Artonit: &lt;guid&gt; (1 корпус)  Parsec: &lt;guid&gt; (1 корпус)</code></pre>
-
-<p><strong>Статусы:</strong>
-  <span class="badge b-ok">OK</span>
-  <span class="badge b-warn">РАСХОЖДЕНИЕ</span>
-  <span class="badge b-warn">НЕТ В PARSEC</span>
-  <span class="badge b-info">ПРОПУЩЕН</span>
-  <span class="badge b-err">ОШИБКА SOAP</span>
-  <span class="badge b-err">ОШИБКА</span>
-</p>
-
-<a class="top-link" href="#top">↑ к оглавлению</a>
-
-<!-- ============================================================= -->
-<h2 id="task2">2. Сверка идентификаторов (карт)</h2>
-
-<table>
-  <tbody>
-    <tr><th style="width:180px;">Имя задачи</th>    <td><code>parsec_sync_identifiers</code></td></tr>
-    <tr><th>Файл</th>                                <td><code>Task/parsec_sync_identifiers.php</code></td></tr>
-    <tr><th>Класс</th>                               <td><code>Task_parsec_sync_identifiers</code></td></tr>
-    <tr><th>Что проверяет</th>                       <td>Совпадение карт персоны в Артонит и Parsec</td></tr>
-  </tbody>
-</table>
-
-<h3>Что делает</h3>
-<ol>
-  <li>Берёт персон с их активными RFID-картами (<code>CARD.id_cardtype = 1</code>, <code>ACTIVE &gt; 0</code>).</li>
-  <li>По каждой персоне вызывает <code>GetPersonIdentifiers(pep_guid)</code>.</li>
-  <li>Приводит обе стороны к единому формату — <strong>8 hex-символов upper</strong>:
-    <ul>
-      <li>Артонит <code>id_card</code> (десятичное, <code>7419840</code>) → <code>dechex</code> → <code>00713490</code>,</li>
-      <li>Parsec <code>CODE</code> (<code>007B4598</code>) — уже hex, нормализуется через <code>str_pad</code>.</li>
-    </ul>
-  </li>
-  <li>Сравнивает множества карт.</li>
-</ol>
-
-<h3>Задачи интегратору</h3>
-<table>
-  <thead>
-    <tr><th style="width:90px;">Операция</th><th>Когда ставится</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>9</strong></td>  <td>Карта есть в Артонит, нет в Parsec — добавить</td></tr>
-    <tr><td><strong>10</strong></td> <td>Карта есть в Parsec, нет в Артонит — удалить</td></tr>
-  </tbody>
-</table>
-
-<h3>Примеры запуска</h3>
-<pre><code>:: Одна персона
-... --task=parsec_sync_identifiers --id_pep=7 --add=0 &gt; sync_ids.log 2&gt;&amp;1
-
-:: Массовый прогон без задач
-... --task=parsec_sync_identifiers --add=0 &gt; sync_ids_all.log 2&gt;&amp;1</code></pre>
-
-<h3>Формат лога</h3>
-<pre><code>[1/1] id_pep=7 guid=441DC23B-...  OK           Акимова Л.  007B4598  007B4598
-[2/1] id_pep=8 guid=...           РАСХОЖДЕНИЕ  Петрова А.  007B4598              + в Артонит: 007B4598</code></pre>
-
-<p><strong>Примечания:</strong></p>
-<ul>
-  <li><code>+ в Артонит: &lt;код&gt;</code> — карта есть в Артонит, нет в Parsec → задача <strong>9</strong></li>
-  <li><code>- в Parsec: &lt;код&gt;</code>  — карта есть в Parsec, нет в Артонит → задача <strong>10</strong></li>
-</ul>
-
-<a class="top-link" href="#top">↑ к оглавлению</a>
-
-<!-- ============================================================= -->
-<h2 id="task3">3. Сверка дерева организаций</h2>
-
-<table>
-  <tbody>
-    <tr><th style="width:180px;">Имя задачи</th>    <td><code>parsecSyncOrg</code></td></tr>
-    <tr><th>Файл</th>                                <td><code>Task/parsecSyncOrg.php</code></td></tr>
-    <tr><th>Класс</th>                               <td><code>Task_parsecSyncOrg</code></td></tr>
-    <tr><th>Что проверяет</th>                       <td>Наличие организаций Артонит в Parsec и совпадение их родителя</td></tr>
-  </tbody>
-</table>
-
-<h3>Что делает</h3>
-<ol>
-  <li>Берёт организации из Артонит (<code>ORGANIZATION.id_org &gt; 3</code>, <code>guid</code> не пуст) с родителем.</li>
-  <li>По <code>guid</code> организации вызывает <code>GetOrgUnit(org_guid)</code>.</li>
-  <li>Если организации нет — <span class="badge b-warn">НЕТ В PARSEC</span>.</li>
-  <li>Если есть — сравнивает:
-    <ul>
-      <li><code>PARENT_ID</code> в Parsec с <code>ORGANIZATION.guid</code> родителя в Артонит,</li>
-      <li><code>NAME</code> в Parsec с названием организации в Артонит (опционально).</li>
-    </ul>
-  </li>
-</ol>
-
-<h3>Задачи интегратору</h3>
-<table>
-  <thead>
-    <tr><th style="width:90px;">Операция</th><th>Когда ставится</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>5</strong></td>  <td>Организации нет в Parsec — добавить</td></tr>
-    <tr><td><strong>55</strong></td> <td>Родитель или название расходятся — изменить</td></tr>
-  </tbody>
-</table>
-
-<h3>Примеры запуска</h3>
-<pre><code>:: Одна организация
-... --task=parsecSyncOrg --id_org=5 --add=0 &gt; sync_org.log 2&gt;&amp;1
-
-:: Массовый прогон
-... --task=parsecSyncOrg --add=0 &gt; sync_org_all.log 2&gt;&amp;1</code></pre>
-
-<h3>Формат лога</h3>
-<pre><code>[1/10] id_org=5 guid=...  OK          1 корпус  parent: &lt;guid&gt; (корень)    parent: &lt;guid&gt;
-[2/10] id_org=6 guid=...  РАСХОЖДЕНИЕ  2 корпус  parent: &lt;guid&gt; (1 корпус)  parent: &lt;guid&gt;  родитель не совпадает</code></pre>
-
-<a class="top-link" href="#top">↑ к оглавлению</a>
-
-<!-- ============================================================= -->
-<h2 id="task4">4. Сверка категорий доступа</h2>
-
-<table>
-  <tbody>
-    <tr><th style="width:180px;">Имя задачи</th>    <td><code>parsecSyncAccessGroups</code></td></tr>
-    <tr><th>Файл</th>                                <td><code>Task/parsecSyncAccessGroups.php</code></td></tr>
-    <tr><th>Класс</th>                               <td><code>Task_parsecSyncAccessGroups</code></td></tr>
-    <tr><th>Что проверяет</th>                       <td>Категории доступа человека в Артонит vs группы доступа его карт в Parsec</td></tr>
-  </tbody>
-</table>
-
-<h3>Что делает</h3>
-<ol>
-  <li>Берёт категории персоны из Артонит (<code>SS_ACCESSUSER</code> → <code>ACCESSNAME.guid</code>).</li>
-  <li>Через <code>GetPersonIdentifiers</code> получает карты персоны в Parsec, у каждой — <code>ACCGROUP_ID</code>.</li>
-  <li><strong>Учитывает «специальную иерархию» Parsec</strong>
-      (<code>ParsecIntegrationDescription_20230113.pdf</code>, стр. 62):
-    <ul>
-      <li>эффективный набор групп карты =
-        <code>{ACCGROUP_ID} ∪ GetInheritedAccessGroups(ACCGROUP_ID)</code>,</li>
-      <li>объединяет по всем картам персоны.</li>
-    </ul>
-  </li>
-  <li>Оставляет только группы, известные в <code>ACCESSNAME</code> Артонит
-      (отбрасывает синтетические «контейнерные» группы).</li>
-  <li>Сравнивает множества.</li>
-</ol>
-
-<h3>Задачи интегратору</h3>
-<table>
-  <thead>
-    <tr><th style="width:90px;">Операция</th><th>Когда ставится</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>7</strong></td> <td>Категория есть у человека в Артонит, но отсутствует на его картах в Parsec</td></tr>
-    <tr><td><strong>8</strong></td> <td>Категория есть на картах в Parsec, но отсутствует у человека в Артонит</td></tr>
-  </tbody>
-</table>
-
-<div class="callout">
-  Сверка делается <strong>на уровне персоны</strong>, как в триггерах
-  <code>PARSEC_07_SS_ACCESSUSER_AI0</code> / <code>PARSEC_08_SS_ACCESSUSER_AD0</code>.
-  Интегратор сам раскидывает категорию по картам.
-</div>
-
-<h3>Примеры запуска</h3>
-<pre><code>:: Одна персона
-... --task=parsecSyncAccessGroups --id_pep=7 --add=0 &gt; sync_ag.log 2&gt;&amp;1
-
-:: Массовый прогон
-... --task=parsecSyncAccessGroups --add=0 &gt; sync_ag_all.log 2&gt;&amp;1</code></pre>
-
-<h3>Формат лога</h3>
-<pre><code>[1/1] id_pep=7 guid=...  OK          Акимова Л.  &lt;guid&gt; (Администраторы)  &lt;guid&gt; (Администраторы)
-[2/1] id_pep=8 guid=...  РАСХОЖДЕНИЕ Петрова А.  &lt;guid&gt; (Гости)                               + в Артонит: &lt;guid&gt;</code></pre>
-
-<a class="top-link" href="#top">↑ к оглавлению</a>
-
-<!-- ============================================================= -->
-<h2 id="order">5. Рекомендуемый порядок запуска</h2>
-
-<p>При полной сверке порядок важен: сначала организации, потом персоны,
-потом карты, потом категории.</p>
-
-<pre><code>chcp 65001
-
-:: 1. Организации
-c:\xampp\php\php.exe ...\minion --task=parsecSyncOrg --add=1 &gt; log_org.log 2&gt;&amp;1
-
-:: 2. Персоны
-c:\xampp\php\php.exe ...\minion --task=parsecSyncPeope --add=1 &gt; log_pep.log 2&gt;&amp;1
-
-:: 3. Карты
-c:\xampp\php\php.exe ...\minion --task=parsec_sync_identifiers --add=1 &gt; log_ids.log 2&gt;&amp;1
-
-:: 4. Категории доступа
-c:\xampp\php\php.exe ...\minion --task=parsecSyncAccessGroups --add=1 &gt; log_ag.log 2&gt;&amp;1</code></pre>
+<h3 id="install-bat">2.3. BAT-файл</h3>
+<pre><code>@echo off
+chcp 1251 &gt; nul
+c:\xampp\php\php.exe c:\xampp\htdocs\city\modules\minion\minion --task=parsecTestTriggers %*</code></pre>
 
 <div class="callout warn">
-  <strong>Правило.</strong> Перед массовым прогоном с <code>--add=1</code>
-  <strong>всегда</strong> сначала запускайте с <code>--add=0</code>.
-  Убедитесь, что количество расхождений правдоподобно (не «все 4492 персоны»).
-  Если расхождений подозрительно много — почти всегда это означает, что
-  парсер не находит нужное поле в SOAP-ответе.
+  <strong>Кодировки:</strong> JSON-файлы сценариев должны быть в <strong>UTF-8 без BOM</strong>.
 </div>
 
 <a class="top-link" href="#top">↑ к оглавлению</a>
 
-<!-- ============================================================= -->
-<h2 id="errors">6. Обработка ошибок и диагностика</h2>
+<!-- ================================================ -->
+<h2 id="rest">3. REST API</h2>
+<p>Базовый URL: <code>http://&lt;host&gt;/city/parsectest</code></p>
 
+<!-- ############ 3.1 ############ -->
+<h3 id="rest-format">3.1. Общий формат ответа</h3>
+
+<h4>Успешный ответ (HTTP 200)</h4>
+<pre><code>{ "ok": true, "operation": "&lt;имя_операции&gt;", ..., "cardindev_new": [ ... ] }</code></pre>
+
+<h4>Ответ с ошибкой (HTTP 400/404/409/500)</h4>
+<pre><code>{ "ok": false, "error": "&lt;номер&gt; &lt;текст ошибки&gt;", "status": 400 }</code></pre>
+
+<h4>Служебные поля ответа</h4>
 <table>
-  <thead>
-    <tr>
-      <th style="width:36%;">Симптом</th>
-      <th style="width:30%;">Причина</th>
-      <th>Что делать</th>
-    </tr>
-  </thead>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Всегда</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td><code>bool</code></td><td>Да</td><td><code>true</code> при успехе, <code>false</code> при ошибке</td></tr>
+    <tr><td><code>operation</code></td><td><code>string</code></td><td>При успехе</td><td>Имя операции</td></tr>
+    <tr><td><code>error</code></td><td><code>string</code></td><td>При ошибке</td><td>Текст ошибки с номером</td></tr>
+    <tr><td><code>status</code></td><td><code>int</code></td><td>При ошибке</td><td>HTTP-статус ошибки</td></tr>
+  </tbody>
+</table>
+
+<h4>Вложенный массив <code>cardindev_new</code></h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>id_cardindev</code></td><td><code>int</code></td><td>Первичный ключ записи</td></tr>
+    <tr><td><code>operation</code></td><td><code>int</code></td><td>Код операции</td></tr>
+    <tr><td><code>id_card</code></td><td><code>string</code></td><td>GUID / ID карты / ID категории</td></tr>
+    <tr><td><code>id_pep</code></td><td><code>int</code></td><td>ID персоны, если применимо</td></tr>
+    <tr><td><code>attempts</code></td><td><code>int</code></td><td>Счётчик попыток (обычно 0)</td></tr>
+  </tbody>
+</table>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.2 add_org ############ -->
+<div class="method-header">
+  <h3 id="rest-add-org">3.2. <code>add_org</code></h3>
+  <span class="method-badge">POST /parsectest/add_org</span>
+  <span class="method-trigger">op = 5</span>
+</div>
+<p>Создать организацию в таблице <code>ORGANIZATION</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>name</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>Название организации</td></tr>
+    <tr><td><code>guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID организации (уникальный)</td></tr>
+    <tr><td><code>parent_guid</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>GUID родителя. Пусто — корень (<code>id_parent = 1</code>)</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"add_org"</code></td></tr>
+    <tr><td><code>id_org</code></td><td>int</td><td>ID созданной организации</td></tr>
+    <tr><td><code>guid</code></td><td>string</td><td>GUID (эхо)</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td>Название (эхо)</td></tr>
+    <tr><td><code>parent_guid</code></td><td>string</td><td>Родитель (эхо)</td></tr>
+    <tr><td><code>parent_id</code></td><td>int</td><td>Фактический <code>id_parent</code></td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 5</code></td></tr>
+  </tbody>
+</table>
+<p><strong>Возможные ошибки:</strong> 106, 113, 126.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.3 add_person ############ -->
+<div class="method-header">
+  <h3 id="rest-add-person">3.3. <code>add_person</code></h3>
+  <span class="method-badge">POST /parsectest/add_person</span>
+  <span class="method-trigger">op = 3</span>
+</div>
+<p>Создать персону в таблице <code>PEOPLE</code>. Организация ищется по <code>org_guid</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>surname</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>Фамилия</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Имя</td></tr>
+    <tr><td><code>patronymic</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Отчество</td></tr>
+    <tr><td><code>guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID персоны (уникальный)</td></tr>
+    <tr><td><code>org_guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID организации (модель сама найдёт <code>id_org</code>)</td></tr>
+    <tr><td><code>tabnum</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Табельный номер</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"add_person"</code></td></tr>
+    <tr><td><code>id_pep</code></td><td>int</td><td>ID созданной персоны</td></tr>
+    <tr><td><code>guid</code></td><td>string</td><td>GUID (эхо)</td></tr>
+    <tr><td><code>surname</code></td><td>string</td><td>Фамилия (эхо)</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td>Имя (эхо)</td></tr>
+    <tr><td><code>patronymic</code></td><td>string</td><td>Отчество (эхо)</td></tr>
+    <tr><td><code>org_guid</code></td><td>string</td><td>GUID организации (эхо)</td></tr>
+    <tr><td><code>id_org</code></td><td>int</td><td>Найденный ID организации</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 3</code></td></tr>
+  </tbody>
+</table>
+<p><strong>Возможные ошибки:</strong> 156, 161, 166, 179.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.4 add_card ############ -->
+<div class="method-header">
+  <h3 id="rest-add-card">3.4. <code>add_card</code></h3>
+  <span class="method-badge">POST /parsectest/add_card</span>
+  <span class="method-trigger">op = 9</span>
+</div>
+<p>Выдать карту персоне. Вставляет запись в <code>CARD</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>pep_guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID персоны</td></tr>
+    <tr><td><code>card</code></td><td>string (digit)</td><td><span class="badge b-req">Да</span></td><td>Номер карты в десятичном виде, диапазон <code>1..2³²</code></td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"add_card"</code></td></tr>
+    <tr><td><code>id_pep</code></td><td>int</td><td>ID персоны</td></tr>
+    <tr><td><code>pep_guid</code></td><td>string</td><td>GUID персоны (эхо)</td></tr>
+    <tr><td><code>card</code></td><td>int</td><td>Номер карты (десятичное)</td></tr>
+    <tr><td><code>card_hex</code></td><td>string</td><td>8 hex-символов upper с ведущими нулями</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 9</code></td></tr>
+  </tbody>
+</table>
+<p><strong>Возможные ошибки:</strong> 207, 215, 221, 227, 233, 247.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.5 add_access ############ -->
+<div class="method-header">
+  <h3 id="rest-add-access">3.5. <code>add_access</code></h3>
+  <span class="method-badge">POST /parsectest/add_access</span>
+  <span class="method-trigger">op = 7</span>
+</div>
+<p>Выдать категорию доступа персоне. Вставляет запись в <code>SS_ACCESSUSER</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>pep_guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID персоны</td></tr>
+    <tr><td><code>accessname_id</code></td><td>int</td><td><span class="badge b-req">Да</span></td><td>ID категории доступа, &gt; 0</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"add_access"</code></td></tr>
+    <tr><td><code>id_pep</code></td><td>int</td><td>ID персоны</td></tr>
+    <tr><td><code>pep_guid</code></td><td>string</td><td>GUID персоны (эхо)</td></tr>
+    <tr><td><code>accessname_id</code></td><td>int</td><td>ID категории доступа (эхо)</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 7</code></td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  Триггер <code>PARSEC_07_SS_ACCESSUSER_AI0</code> срабатывает только если у персоны уже есть <strong>активная RFID-карта</strong>.
+</div>
+<p><strong>Возможные ошибки:</strong> 271, 276, 288.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.6 update_org ############ -->
+<div class="method-header">
+  <h3 id="rest-update-org">3.6. <code>update_org</code></h3>
+  <span class="method-badge">POST /parsectest/update_org</span>
+  <span class="method-trigger">op = 55</span>
+</div>
+<p>Обновить поля организации. В БД уходит <code>UPDATE ORGANIZATION</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID организации</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Новое название</td></tr>
+    <tr><td><code>parent_guid</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>GUID нового родителя</td></tr>
+    <tr><td><code>divcode</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Код подразделения</td></tr>
+  </tbody>
+</table>
+<p>Хотя бы одно из необязательных полей должно быть передано, иначе ошибка 561.</p>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"update_org"</code></td></tr>
+    <tr><td><code>id_org</code></td><td>int</td><td>ID обновлённой организации</td></tr>
+    <tr><td><code>guid</code></td><td>string</td><td>GUID (эхо)</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 55</code></td></tr>
+  </tbody>
+</table>
+<p><strong>Возможные ошибки:</strong> 540, 545, 553, 561, 568.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.7 update_person ############ -->
+<div class="method-header">
+  <h3 id="rest-update-person">3.7. <code>update_person</code></h3>
+  <span class="method-badge">POST /parsectest/update_person</span>
+  <span class="method-trigger">op = 35</span>
+</div>
+<p>Обновить поля персоны. В БД уходит <code>UPDATE PEOPLE</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID персоны</td></tr>
+    <tr><td><code>surname</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Новая фамилия</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Новое имя</td></tr>
+    <tr><td><code>patronymic</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Новое отчество</td></tr>
+    <tr><td><code>tabnum</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Новый табельный номер</td></tr>
+    <tr><td><code>org_guid</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>GUID новой организации</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"update_person"</code></td></tr>
+    <tr><td><code>id_pep</code></td><td>int</td><td>ID обновлённой персоны</td></tr>
+    <tr><td><code>guid</code></td><td>string</td><td>GUID (эхо)</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 35</code></td></tr>
+  </tbody>
+</table>
+<p><strong>Возможные ошибки:</strong> 505, 510, 518, 523, 530.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.8 del_org ############ -->
+<div class="method-header">
+  <h3 id="rest-del-org">3.8. <code>del_org</code></h3>
+  <span class="method-badge">POST /parsectest/del_org</span>
+  <span class="method-trigger">op = 6</span>
+</div>
+<p>Удалить организацию. В БД уходит <code>DELETE FROM ORGANIZATION</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID организации</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"del_org"</code></td></tr>
+    <tr><td><code>id_org</code></td><td>int</td><td>ID удалённой организации</td></tr>
+    <tr><td><code>guid</code></td><td>string</td><td>GUID (эхо)</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 6</code></td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  Если в организации есть персоны, DELETE может упасть с FK-ошибкой. Сначала удалите персон.
+</div>
+<p><strong>Возможные ошибки:</strong> 406, 411, 418.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.9 del_person ############ -->
+<div class="method-header">
+  <h3 id="rest-del-person">3.9. <code>del_person</code></h3>
+  <span class="method-badge">POST /parsectest/del_person</span>
+  <span class="method-trigger">op = 4</span>
+</div>
+<p>Удалить персону. В БД уходит <code>DELETE FROM PEOPLE</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID персоны</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"del_person"</code></td></tr>
+    <tr><td><code>id_pep</code></td><td>int</td><td>ID удалённой персоны</td></tr>
+    <tr><td><code>guid</code></td><td>string</td><td>GUID (эхо)</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 4</code></td></tr>
+  </tbody>
+</table>
+<p><strong>Возможные ошибки:</strong> 430, 435, 442.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.10 del_card ############ -->
+<div class="method-header">
+  <h3 id="rest-del-card">3.10. <code>del_card</code></h3>
+  <span class="method-badge">POST /parsectest/del_card</span>
+  <span class="method-trigger">op = 10</span>
+</div>
+<p>Удалить карту у персоны. В БД уходит <code>DELETE FROM CARD</code> по <code>id_pep</code> и <code>id_card</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>pep_guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID персоны</td></tr>
+    <tr><td><code>card</code></td><td>string (digit)</td><td><span class="badge b-req">Да</span></td><td>Номер карты (десятичный)</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"del_card"</code></td></tr>
+    <tr><td><code>id_pep</code></td><td>int</td><td>ID персоны</td></tr>
+    <tr><td><code>pep_guid</code></td><td>string</td><td>GUID персоны (эхо)</td></tr>
+    <tr><td><code>card</code></td><td>int</td><td>Номер карты (десятичное)</td></tr>
+    <tr><td><code>card_hex</code></td><td>string</td><td>8 hex-символов upper</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 10</code></td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  Триггер <code>PARSEC_10_CARD_AD0</code> срабатывает только если персона <strong>ещё существует</strong>.
+</div>
+<p><strong>Возможные ошибки:</strong> 455, 460, 465, 472.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.11 del_access ############ -->
+<div class="method-header">
+  <h3 id="rest-del-access">3.11. <code>del_access</code></h3>
+  <span class="method-badge">POST /parsectest/del_access</span>
+  <span class="method-trigger">op = 8</span>
+</div>
+<p>Удалить категорию доступа у персоны. В БД уходит <code>DELETE FROM SS_ACCESSUSER</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>pep_guid</code></td><td>string</td><td><span class="badge b-req">Да</span></td><td>GUID персоны</td></tr>
+    <tr><td><code>accessname_id</code></td><td>int</td><td><span class="badge b-req">Да</span></td><td>ID категории доступа</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"del_access"</code></td></tr>
+    <tr><td><code>id_pep</code></td><td>int</td><td>ID персоны</td></tr>
+    <tr><td><code>pep_guid</code></td><td>string</td><td>GUID персоны (эхо)</td></tr>
+    <tr><td><code>accessname_id</code></td><td>int</td><td>ID категории (эхо)</td></tr>
+    <tr><td><code>cardindev_new</code></td><td>array</td><td>Записи с <code>operation = 8</code></td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  Триггер <code>PARSEC_08_SS_ACCESSUSER_AD0</code> требует, чтобы у персоны <strong>оставалась хотя бы одна карта</strong>.
+</div>
+<p><strong>Возможные ошибки:</strong> 480, 485, 492.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.12 status ############ -->
+<div class="method-header">
+  <h3 id="rest-status">3.12. <code>status</code></h3>
+  <span class="method-badge">GET /parsectest/status</span>
+</div>
+<p>Показать последние N записей <code>CARDINDEV</code>.</p>
+
+<h4>Входные параметры (query string)</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>limit</code></td><td>int</td><td><span class="badge b-opt">Нет</span></td><td>Сколько записей вернуть. По умолчанию 20, максимум 500</td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"status"</code></td></tr>
+    <tr><td><code>max_id</code></td><td>int</td><td>Максимальный <code>ID_CARDINDEV</code> в БД</td></tr>
+    <tr><td><code>rows</code></td><td>array</td><td>Массив записей (см. ниже)</td></tr>
+  </tbody>
+</table>
+
+<h4>Структура элемента <code>rows[]</code></h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>id_cardindev</code></td><td>int</td><td>Первичный ключ</td></tr>
+    <tr><td><code>operation</code></td><td>int</td><td>Код операции</td></tr>
+    <tr><td><code>id_card</code></td><td>string</td><td>Значение <code>ID_CARD</code></td></tr>
+    <tr><td><code>id_pep</code></td><td>string</td><td>Значение <code>ID_PEP</code></td></tr>
+    <tr><td><code>attempts</code></td><td>int</td><td>Количество попыток</td></tr>
+    <tr><td><code>time_stamp</code></td><td>string</td><td>Метка времени</td></tr>
+  </tbody>
+</table>
+<p><strong>Возможные ошибки:</strong> 322.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.13 cleanup ############ -->
+<div class="method-header">
+  <h3 id="rest-cleanup">3.13. <code>cleanup</code></h3>
+  <span class="method-badge">POST /parsectest/cleanup</span>
+</div>
+<p>Удалить тестовые данные по префиксу GUID. Порядок: <code>CARD</code> → <code>SS_ACCESSUSER</code> → <code>PEOPLE</code> → <code>ORGANIZATION</code> → подчистка <code>CARDINDEV</code>.</p>
+
+<h4>Входные параметры</h4>
+<table>
+  <thead><tr><th>Параметр</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>prefix</code></td><td>string</td><td><span class="badge b-opt">Нет</span></td><td>Префикс GUID. По умолчанию <code>TEST-</code></td></tr>
+  </tbody>
+</table>
+
+<h4>Выходные поля</h4>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>ok</code></td><td>bool</td><td><code>true</code></td></tr>
+    <tr><td><code>operation</code></td><td>string</td><td><code>"cleanup"</code></td></tr>
+    <tr><td><code>prefix</code></td><td>string</td><td>Использованный префикс</td></tr>
+    <tr><td><code>deleted</code></td><td>object</td><td>Отчёт по удалению</td></tr>
+  </tbody>
+</table>
+
+<h4>Структура <code>deleted</code></h4>
+<table>
+  <thead><tr><th>Ключ</th><th>Тип</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>CARD</code></td><td>int</td><td>Сколько персон участвовало в удалении карт</td></tr>
+    <tr><td><code>CARD_error</code></td><td>string</td><td>Текст ошибки при ошибке DELETE CARD</td></tr>
+    <tr><td><code>SS_ACCESSUSER</code></td><td>int</td><td>Сколько персон участвовало в удалении категорий</td></tr>
+    <tr><td><code>SS_ACCESSUSER_error</code></td><td>string</td><td>Текст ошибки</td></tr>
+    <tr><td><code>PEOPLE</code></td><td>string</td><td><code>"ok"</code> при успехе</td></tr>
+    <tr><td><code>PEOPLE_error</code></td><td>string</td><td>Текст ошибки</td></tr>
+    <tr><td><code>ORGANIZATION</code></td><td>string</td><td><code>"ok"</code> при успехе</td></tr>
+    <tr><td><code>ORGANIZATION_error</code></td><td>string</td><td>Текст ошибки</td></tr>
+    <tr><td><code>CARDINDEV_cleaned</code></td><td>bool</td><td><code>true</code>, если CARDINDEV подчищен</td></tr>
+    <tr><td><code>CARDINDEV_error</code></td><td>string</td><td>Текст ошибки</td></tr>
+  </tbody>
+</table>
+<p><strong>Возможные ошибки:</strong> 371.</p>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ############ 3.14 curl ############ -->
+<h3 id="rest-curl">3.14. Примеры curl</h3>
+<pre><code># Создать организацию
+curl -X POST http://localhost/city/parsectest/add_org \
+     -d "name=TEST-ORG-1&amp;guid=TEST-ORG-1"
+
+# Изменить организацию
+curl -X POST http://localhost/city/parsectest/update_org \
+     -d "guid=TEST-ORG-1&amp;name=TEST-ORG-RENAMED"
+
+# Удалить организацию
+curl -X POST http://localhost/city/parsectest/del_org \
+     -d "guid=TEST-ORG-1"
+
+# Создать персону
+curl -X POST http://localhost/city/parsectest/add_person \
+     -d "surname=Тестов&amp;name=Иван&amp;guid=TEST-PEP-1&amp;org_guid=TEST-ORG-1"
+
+# Изменить персону
+curl -X POST http://localhost/city/parsectest/update_person \
+     -d "guid=TEST-PEP-1&amp;surname=Изменённый"
+
+# Удалить персону
+curl -X POST http://localhost/city/parsectest/del_person \
+     -d "guid=TEST-PEP-1"
+
+# Выдать карту
+curl -X POST http://localhost/city/parsectest/add_card \
+     -d "pep_guid=TEST-PEP-1&amp;card=7419840"
+
+# Удалить карту
+curl -X POST http://localhost/city/parsectest/del_card \
+     -d "pep_guid=TEST-PEP-1&amp;card=7419840"
+
+# Выдать категорию
+curl -X POST http://localhost/city/parsectest/add_access \
+     -d "pep_guid=TEST-PEP-1&amp;accessname_id=64"
+
+# Удалить категорию
+curl -X POST http://localhost/city/parsectest/del_access \
+     -d "pep_guid=TEST-PEP-1&amp;accessname_id=64"
+
+# Статус
+curl "http://localhost/city/parsectest/status?limit=5"
+
+# Очистка
+curl -X POST http://localhost/city/parsectest/cleanup -d "prefix=TEST-"</code></pre>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ================================================ -->
+<h2 id="task">4. Minion-таск</h2>
+
+<h3 id="task-run">4.1. Запуск</h3>
+<pre><code>:: базовый прогон с очисткой
+parsecTestTriggers.bat
+
+:: без очистки
+parsecTestTriggers.bat --cleanup=0
+
+:: конкретный сценарий
+parsecTestTriggers.bat --scenario=all_triggers --cleanup=0</code></pre>
+
+<h3 id="task-opts">4.2. Опции</h3>
+<table>
+  <thead><tr><th>Опция</th><th>Тип</th><th>По умолчанию</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>--scenario</code></td><td>string</td><td><code>basic</code></td><td>Имя сценария или путь к JSON</td></tr>
+    <tr><td><code>--cleanup</code></td><td>0|1</td><td><code>1</code></td><td>Удалить тестовые данные после прогона</td></tr>
+    <tr><td><code>--verbose</code></td><td>0|1</td><td><code>1</code></td><td>Печатать PARAMS и поля ответа</td></tr>
+    <tr><td><code>--list</code></td><td>0|1</td><td><code>0</code></td><td>Показать список сценариев</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  В Minion опции передаются <strong>через <code>=</code></strong>. Синтаксис <code>--scenario basic</code> (с пробелом) <strong>не работает</strong>.
+</div>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ================================================ -->
+<h2 id="scenarios">5. Сценарии</h2>
+
+<h3 id="scenarios-format">5.1. Формат шага</h3>
+<pre><code>{
+    "id": "org",
+    "description": "Добавить организацию",
+    "action": "add_org",
+    "params": {
+        "name": "TEST-ORG-{suffix}",
+        "guid": "TEST-ORG-{suffix}"
+    },
+    "expect_ops": [5]
+}</code></pre>
+
+<h3 id="scenarios-fields">5.2. Поля шага</h3>
+<table>
+  <thead><tr><th>Поле</th><th>Тип</th><th>Обяз.</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>string</td><td>Да</td><td>Идентификатор шага для <code>{ctx.&lt;id&gt;.&lt;field&gt;}</code></td></tr>
+    <tr><td><code>description</code></td><td>string</td><td>Нет</td><td>Описание для лога</td></tr>
+    <tr><td><code>action</code></td><td>string</td><td>Да</td><td>Имя метода <code>Model_ParsecTest</code></td></tr>
+    <tr><td><code>params</code></td><td>object</td><td>Да</td><td>Параметры метода</td></tr>
+    <tr><td><code>expect_ops</code></td><td>array&lt;int&gt;</td><td>Нет</td><td>Ожидаемые коды операций в CARDINDEV</td></tr>
+  </tbody>
+</table>
+
+<h3 id="scenarios-placeholders">5.3. Плейсхолдеры</h3>
+<table>
+  <thead><tr><th>Плейсхолдер</th><th>Тип</th><th>Пример</th></tr></thead>
+  <tbody>
+    <tr><td><code>{suffix}</code></td><td>string</td><td><code>20260917123456_7890</code></td></tr>
+    <tr><td><code>{ts}</code></td><td>int</td><td><code>1758080876</code></td></tr>
+    <tr><td><code>{uniq}</code></td><td>string</td><td><code>68cb0d1e4a3b2</code></td></tr>
+    <tr><td><code>{cardnum}</code></td><td>int</td><td>Случайное <code>1..16777215</code></td></tr>
+    <tr><td><code>{ctx.&lt;id&gt;.&lt;field&gt;}</code></td><td>mixed</td><td><code>{ctx.org.guid}</code> → фактический GUID</td></tr>
+  </tbody>
+</table>
+
+<h3 id="scenarios-json">5.4. Правила JSON</h3>
+<div class="callout danger">
+  Запятая ставится <strong>между</strong> элементами, но <strong>не после последнего</strong>. Файл — в <strong>UTF-8 без BOM</strong>.
+</div>
+<p>Проверка:</p>
+<pre><code>c:\xampp\php\php.exe -r "json_decode(file_get_contents('path/to/file.json')); echo json_last_error_msg(), PHP_EOL;"</code></pre>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ================================================ -->
+<h2 id="all-triggers">6. Полный тест всех триггеров</h2>
+
+<h3 id="all-triggers-file">6.1. Файл сценария</h3>
+<pre><code>{
+    "name": "Полный тест всех триггеров Parsec",
+    "description": "Проверяет все 10 триггеров: 5, 55, 3, 35, 9, 7, 8, 10, 4, 6.",
+    "steps": [
+        { "id": "org",        "action": "add_org",       "params": { "name": "TEST-ORG-{suffix}", "guid": "TEST-ORG-{suffix}", "parent_guid": "" }, "expect_ops": [5] },
+        { "id": "org_upd",    "action": "update_org",    "params": { "guid": "TEST-ORG-{suffix}", "name": "TEST-ORG-RENAMED-{suffix}" }, "expect_ops": [55] },
+        { "id": "pep",        "action": "add_person",    "params": { "surname": "Тестов", "name": "Иван", "patronymic": "Тестович", "guid": "TEST-PEP-{suffix}", "org_guid": "TEST-ORG-{suffix}", "tabnum": "T-{suffix}" }, "expect_ops": [3] },
+        { "id": "pep_upd",    "action": "update_person", "params": { "guid": "TEST-PEP-{suffix}", "surname": "Тестов-Изменённый" }, "expect_ops": [35] },
+        { "id": "card",       "action": "add_card",      "params": { "pep_guid": "TEST-PEP-{suffix}", "card": "{cardnum}" }, "expect_ops": [9] },
+        { "id": "access",     "action": "add_access",    "params": { "pep_guid": "TEST-PEP-{suffix}", "accessname_id": 64 }, "expect_ops": [7] },
+        { "id": "access_del", "action": "del_access",    "params": { "pep_guid": "TEST-PEP-{suffix}", "accessname_id": 64 }, "expect_ops": [8] },
+        { "id": "card_del",   "action": "del_card",      "params": { "pep_guid": "TEST-PEP-{suffix}", "card": "{ctx.card.card}" }, "expect_ops": [10] },
+        { "id": "pep_del",    "action": "del_person",    "params": { "guid": "TEST-PEP-{suffix}" }, "expect_ops": [4] },
+        { "id": "org_del",    "action": "del_org",       "params": { "guid": "TEST-ORG-{suffix}" }, "expect_ops": [6] }
+    ]
+}</code></pre>
+
+<h3 id="all-triggers-order">6.2. Порядок шагов и зависимости</h3>
+<table>
+  <thead><tr><th>#</th><th>Op</th><th>Триггер</th><th>Зависимость</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>5</td><td><code>PARSEC_05_ORGANIZATION_AI0</code></td><td>—</td></tr>
+    <tr><td>2</td><td>55</td><td><code>PARSEC_55_ORGANIZATION_AU0</code></td><td>Организация существует</td></tr>
+    <tr><td>3</td><td>3</td><td><code>PARSEC_03_PEOPLE_AI0</code></td><td>Организация существует</td></tr>
+    <tr><td>4</td><td>35</td><td><code>PARSEC_35_PEOPLE_AU0</code></td><td>Изменяемое поле отличается</td></tr>
+    <tr><td>5</td><td>9</td><td><code>PARSEC_07_09_CARD_AI0</code></td><td>Персона существует</td></tr>
+    <tr><td>6</td><td>7</td><td><code>PARSEC_07_SS_ACCESSUSER_AI0</code></td><td>У персоны <strong>есть карта</strong></td></tr>
+    <tr><td>7</td><td>8</td><td><code>PARSEC_08_SS_ACCESSUSER_AD0</code></td><td>У персоны <strong>есть карта</strong></td></tr>
+    <tr><td>8</td><td>10</td><td><code>PARSEC_10_CARD_AD0</code></td><td>Персона <strong>ещё существует</strong></td></tr>
+    <tr><td>9</td><td>4</td><td><code>PARSEC_04_PEOPLE_AD0</code></td><td>Все карты удалены</td></tr>
+    <tr><td>10</td><td>6</td><td><code>PARSEC_06_ORGANIZATION_BD0</code></td><td>Все персоны удалены</td></tr>
+  </tbody>
+</table>
+
+<div class="callout danger">
+  <strong>Не меняйте порядок!</strong> Если поменять местами удаление карты и персоны — триггер 10 не сработает. Если удалить карту до категории — триггер 8 не сработает.
+</div>
+
+<h3 id="all-triggers-run">6.3. Запуск</h3>
+<pre><code>parsecTestTriggers.bat --scenario=all_triggers --cleanup=0</code></pre>
+
+<h3 id="all-triggers-output">6.4. Ожидаемый вывод</h3>
+<pre><code>[1]  org         op=5
+[2]  org_upd     op=55
+[3]  pep         op=3
+[4]  pep_upd     op=35
+[5]  card        op=9
+[6]  access      op=7
+[7]  access_del  op=8
+[8]  card_del    op=10
+[9]  pep_del     op=4
+[10] org_del     op=6
+
+РЕЗУЛЬТАТ: PASS</code></pre>
+
+<h3 id="all-triggers-reqs">6.5. Требования перед запуском</h3>
+<div class="callout warn">
+  <strong>1. <code>accessname_id = 64</code> должен быть привязан к Parsec.</strong> Иначе триггеры 7 и 8 проигнорируют вставку.
+  <pre><code>SELECT s.id_server, s.name
+FROM accessname an
+JOIN access a ON an.id_accessname = a.id_accessname
+JOIN device d ON a.id_dev = d.id_dev
+JOIN device d2 ON d2.id_ctrl = d.id_ctrl AND d2.id_reader IS NULL
+JOIN server s ON d2.id_server = s.id_server
+WHERE an.id_accessname = 64;</code></pre>
+  <code>id_server</code> должен быть <code>1</code>.
+</div>
+
+<div class="callout warn">
+  <strong>2. Все триггеры активны.</strong>
+  <pre><code>SELECT RDB$TRIGGER_NAME, RDB$TRIGGER_INACTIVE
+FROM RDB$TRIGGERS
+WHERE RDB$TRIGGER_NAME STARTING WITH 'PARSEC_'
+ORDER BY RDB$TRIGGER_NAME;</code></pre>
+  Все должны иметь <code>RDB$TRIGGER_INACTIVE = 0</code>.
+</div>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ================================================ -->
+<h2 id="ops">7. Справочник кодов операций</h2>
+<table>
+  <thead><tr><th>Код</th><th>Значение</th><th>Триггер</th><th>Метод модели</th></tr></thead>
+  <tbody>
+    <tr><td><strong>3</strong></td><td>Добавить пользователя</td><td><code>PARSEC_03_PEOPLE_AI0</code></td><td><code>add_person</code></td></tr>
+    <tr><td><strong>4</strong></td><td>Удалить пользователя</td><td><code>PARSEC_04_PEOPLE_AD0</code></td><td><code>del_person</code></td></tr>
+    <tr><td><strong>5</strong></td><td>Добавить организацию</td><td><code>PARSEC_05_ORGANIZATION_AI0</code></td><td><code>add_org</code></td></tr>
+    <tr><td><strong>6</strong></td><td>Удалить организацию</td><td><code>PARSEC_06_ORGANIZATION_BD0</code></td><td><code>del_org</code></td></tr>
+    <tr><td><strong>7</strong></td><td>Добавить категорию доступа</td><td><code>PARSEC_07_SS_ACCESSUSER_AI0</code></td><td><code>add_access</code></td></tr>
+    <tr><td><strong>8</strong></td><td>Удалить категорию доступа</td><td><code>PARSEC_08_SS_ACCESSUSER_AD0</code></td><td><code>del_access</code></td></tr>
+    <tr><td><strong>9</strong></td><td>Добавить карту</td><td><code>PARSEC_07_09_CARD_AI0</code></td><td><code>add_card</code></td></tr>
+    <tr><td><strong>10</strong></td><td>Удалить карту</td><td><code>PARSEC_10_CARD_AD0</code></td><td><code>del_card</code></td></tr>
+    <tr><td><strong>35</strong></td><td>Изменить данные пользователя</td><td><code>PARSEC_35_PEOPLE_AU0</code></td><td><code>update_person</code></td></tr>
+    <tr><td><strong>55</strong></td><td>Изменить данные организации</td><td><code>PARSEC_55_ORGANIZATION_AU0</code></td><td><code>update_org</code></td></tr>
+  </tbody>
+</table>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ================================================ -->
+<h2 id="errors">8. Справочник кодов ошибок</h2>
+
+<h3 id="errors-create">8.1. Создание</h3>
+<table>
+  <thead><tr><th>Код</th><th>HTTP</th><th>Метод</th><th>Когда возникает</th></tr></thead>
+  <tbody>
+    <tr><td>106</td><td>400</td><td><code>add_org</code></td><td>Пустые name или guid</td></tr>
+    <tr><td>113</td><td>404</td><td><code>add_org</code></td><td>parent_guid не найден</td></tr>
+    <tr><td>126</td><td>500</td><td><code>add_org</code></td><td>Ошибка SQL</td></tr>
+    <tr><td>156</td><td>400</td><td><code>add_person</code></td><td>Пустые surname, guid или org_guid</td></tr>
+    <tr><td>161</td><td>404</td><td><code>add_person</code></td><td>Организация не найдена</td></tr>
+    <tr><td>166</td><td>409</td><td><code>add_person</code></td><td>GUID уже занят</td></tr>
+    <tr><td>179</td><td>500</td><td><code>add_person</code></td><td>Ошибка SQL</td></tr>
+    <tr><td>207</td><td>400</td><td><code>add_card</code></td><td>Пустые pep_guid или card</td></tr>
+    <tr><td>215</td><td>400</td><td><code>add_card</code></td><td>card не число</td></tr>
+    <tr><td>221</td><td>400</td><td><code>add_card</code></td><td>card вне 1..2³²</td></tr>
+    <tr><td>227</td><td>404</td><td><code>add_card</code></td><td>Персона не найдена</td></tr>
+    <tr><td>233</td><td>409</td><td><code>add_card</code></td><td>Карта уже выдана</td></tr>
+    <tr><td>247</td><td>500</td><td><code>add_card</code></td><td>Ошибка SQL</td></tr>
+    <tr><td>271</td><td>400</td><td><code>add_access</code></td><td>Пустые pep_guid или accessname_id</td></tr>
+    <tr><td>276</td><td>404</td><td><code>add_access</code></td><td>Персона не найдена</td></tr>
+    <tr><td>288</td><td>500</td><td><code>add_access</code></td><td>Ошибка SQL</td></tr>
+  </tbody>
+</table>
+
+<h3 id="errors-delete">8.2. Удаление</h3>
+<table>
+  <thead><tr><th>Код</th><th>HTTP</th><th>Метод</th><th>Когда возникает</th></tr></thead>
+  <tbody>
+    <tr><td>406</td><td>400</td><td><code>del_org</code></td><td>Пустой guid</td></tr>
+    <tr><td>411</td><td>404</td><td><code>del_org</code></td><td>Организация не найдена</td></tr>
+    <tr><td>418</td><td>500</td><td><code>del_org</code></td><td>Ошибка SQL (FK-зависимости?)</td></tr>
+    <tr><td>430</td><td>400</td><td><code>del_person</code></td><td>Пустой guid</td></tr>
+    <tr><td>435</td><td>404</td><td><code>del_person</code></td><td>Персона не найдена</td></tr>
+    <tr><td>442</td><td>500</td><td><code>del_person</code></td><td>Ошибка SQL</td></tr>
+    <tr><td>455</td><td>400</td><td><code>del_card</code></td><td>Пустые pep_guid или card</td></tr>
+    <tr><td>460</td><td>400</td><td><code>del_card</code></td><td>card не число</td></tr>
+    <tr><td>465</td><td>404</td><td><code>del_card</code></td><td>Персона не найдена</td></tr>
+    <tr><td>472</td><td>500</td><td><code>del_card</code></td><td>Ошибка SQL</td></tr>
+    <tr><td>480</td><td>400</td><td><code>del_access</code></td><td>Пустые pep_guid или accessname_id</td></tr>
+    <tr><td>485</td><td>404</td><td><code>del_access</code></td><td>Персона не найдена</td></tr>
+    <tr><td>492</td><td>500</td><td><code>del_access</code></td><td>Ошибка SQL</td></tr>
+  </tbody>
+</table>
+
+<h3 id="errors-update">8.3. Обновление</h3>
+<table>
+  <thead><tr><th>Код</th><th>HTTP</th><th>Метод</th><th>Когда возникает</th></tr></thead>
+  <tbody>
+    <tr><td>505</td><td>400</td><td><code>update_person</code></td><td>Пустой guid</td></tr>
+    <tr><td>510</td><td>404</td><td><code>update_person</code></td><td>Персона не найдена</td></tr>
+    <tr><td>518</td><td>404</td><td><code>update_person</code></td><td>Новая организация не найдена</td></tr>
+    <tr><td>523</td><td>400</td><td><code>update_person</code></td><td>Не передано ни одного поля</td></tr>
+    <tr><td>530</td><td>500</td><td><code>update_person</code></td><td>Ошибка SQL</td></tr>
+    <tr><td>540</td><td>400</td><td><code>update_org</code></td><td>Пустой guid</td></tr>
+    <tr><td>545</td><td>404</td><td><code>update_org</code></td><td>Организация не найдена</td></tr>
+    <tr><td>553</td><td>404</td><td><code>update_org</code></td><td>Новый родитель не найден</td></tr>
+    <tr><td>561</td><td>400</td><td><code>update_org</code></td><td>Не передано ни одного поля</td></tr>
+    <tr><td>568</td><td>500</td><td><code>update_org</code></td><td>Ошибка SQL</td></tr>
+  </tbody>
+</table>
+
+<h3 id="errors-service">8.4. Служебные</h3>
+<table>
+  <thead><tr><th>Код</th><th>HTTP</th><th>Метод</th><th>Когда возникает</th></tr></thead>
+  <tbody>
+    <tr><td>322</td><td>500</td><td><code>status</code></td><td>Ошибка SQL при SELECT</td></tr>
+    <tr><td>371</td><td>500</td><td><code>cleanup</code></td><td>Ошибка SQL при выборке персон</td></tr>
+  </tbody>
+</table>
+
+<a class="top-link" href="#top">↑ к оглавлению</a>
+
+<!-- ================================================ -->
+<h2 id="diag">9. Диагностика</h2>
+
+<h3 id="diag-problems">9.1. Типовые проблемы</h3>
+<table>
+  <thead><tr><th>Симптом</th><th>Причина</th><th>Что делать</th></tr></thead>
   <tbody>
     <tr>
-      <td>Все персоны в «НЕТ В PARSEC»</td>
-      <td>SOAP недоступен, mock отключён, нет сессии</td>
-      <td>Проверить <code>modules/parsec/config/soap.php</code>, <code>mock_mode</code>, доступность WSDL</td>
+      <td><span class="badge b-warn">ПРОВАЛ. Ожидалось: [7], получено: []</span></td>
+      <td>Триггер 7 требует активной карты</td>
+      <td>Поменять порядок: card до access</td>
     </tr>
     <tr>
-      <td>Все персоны в «РАСХОЖДЕНИЕ + в Артонит»</td>
-      <td><code>ORG_ID</code>/<code>PARENT_ID</code>/<code>CODE</code> не извлекаются</td>
-      <td>Добавить временный <code>print_r($response)</code> для одной записи, посмотреть реальные имена полей</td>
+      <td><span class="badge b-warn">ПРОВАЛ. Ожидалось: [8], получено: []</span></td>
+      <td>Триггер 8 требует наличия карты</td>
+      <td>Удалять категорию до карты</td>
     </tr>
     <tr>
-      <td>Все персоны в «ОШИБКА: нет ORG_ID»</td>
-      <td>Ответ <code>GetPerson</code> не содержит ожидаемого поля</td>
-      <td>Смотреть сырой ответ, поправить извлечение</td>
+      <td><span class="badge b-warn">ПРОВАЛ. Ожидалось: [10], получено: []</span></td>
+      <td>Триггер 10 требует существования персоны</td>
+      <td>Удалять карту до персоны</td>
     </tr>
     <tr>
-      <td>Кракозябры в логе (только ФИО)</td>
-      <td>Файл <code>.php</code> в UTF-8, данные Firebird в CP1251</td>
-      <td>Пересохранить <code>.php</code> в Windows-1251<br>
-          (Notepad++: <code>Кодировки → Преобразовать в ANSI</code>)</td>
+      <td>Не запускается указанный сценарий, идёт basic</td>
+      <td>Пробел между опцией и значением</td>
+      <td>Использовать <code>--scenario=имя</code></td>
     </tr>
     <tr>
-      <td>Кракозябры только в названии организации из Parsec</td>
-      <td>Parsec отдаёт UTF-8, лог в CP1251</td>
-      <td>Уже обрабатывается через <code>_utf8_to_cp1251</code>. Проверить, что для поля вызван этот хелпер</td>
+      <td><code>Malformed UTF-8 characters</code></td>
+      <td>JSON в CP1251</td>
+      <td>Сохранить в UTF-8 без BOM</td>
     </tr>
     <tr>
-      <td>Слишком много задач при <code>--add=1</code></td>
-      <td>Ложные расхождения из-за парсера</td>
-      <td>Остановить, разобраться, удалить лишние задачи из <code>CARDINDEV</code>, перезапустить</td>
+      <td>418 DELETE ORGANIZATION: foreign key</td>
+      <td>Есть персоны в организации</td>
+      <td>Удалить персон первыми</td>
     </tr>
   </tbody>
 </table>
 
-<h3>Просмотр сырого SOAP-ответа</h3>
-<p>Временная вставка в соответствующем методе задачи:</p>
-<pre><code>static $debug_done = false;
-if (!$debug_done) {
-    $debug_done = true;
-    Minion_CLI::write('=== DEBUG ===');
-    Minion_CLI::write(print_r($response, true));
-    Minion_CLI::write('=== END ===');
-}</code></pre>
-<p>Запустить с <code>--id_pep=1 --add=0 --verbose=1</code>
-(или <code>--id_org=5</code>) и посмотреть в логе структуру ответа.</p>
+<h3 id="diag-cardindev">9.2. Проверка CARDINDEV</h3>
+<pre><code>SELECT * FROM CARDINDEV
+ORDER BY ID_CARDINDEV DESC
+ROWS 20;</code></pre>
 
-<a class="top-link" href="#top">↑ к оглавлению</a>
+<h3 id="diag-triggers">9.3. Проверка активности триггеров</h3>
+<pre><code>SELECT RDB$TRIGGER_NAME, RDB$TRIGGER_INACTIVE
+FROM RDB$TRIGGERS
+WHERE RDB$TRIGGER_NAME STARTING WITH 'PARSEC_'
+ORDER BY RDB$TRIGGER_NAME;</code></pre>
+<p>Все должны иметь <code>RDB$TRIGGER_INACTIVE = 0</code>.</p>
 
-<!-- ============================================================= -->
-<h2 id="mock">7. Mock-режим</h2>
-
-<p>В <code>modules/parsec/config/soap.php</code>:</p>
-<pre><code>'mock_mode' =&gt; true,   // true — работа без реального Parsec</code></pre>
-
-<p>В mock-режиме <code>Model_Cch</code> использует <code>MockSoapClient</code>,
-который возвращает фиксированные данные. Удобно для отладки логики
-парсеров и постановки задач — но <strong>все</strong> персоны/карты/организации
-будут выглядеть не так, как в реальной системе.</p>
-
-<div class="callout danger">
-  Перед рабочей сверкой mock <strong>обязательно выключить</strong>:
-  <code>'mock_mode' =&gt; false,</code>
-</div>
-
-<a class="top-link" href="#top">↑ к оглавлению</a>
-
-<!-- ============================================================= -->
-<h2 id="integration">8. Просмотр результатов работы интегратора</h2>
-
-<p>После того как задачи созданы в <code>CARDINDEV</code>, их подхватывает
-внешний сервис:</p>
-
-<pre><code>C:\IntegrationClient\Service\ParsecIntegrationClient.exe</code></pre>
-
-<p>Логи интегратора:</p>
+<h3 id="diag-integrator">9.4. Состояние интегратора</h3>
 <pre><code>C:\IntegrationClient\log\
 C:\IntegrationClient\state.json</code></pre>
-
-<p>Отображение состояния — на странице модуля:</p>
-<pre><code>http://&lt;host&gt;/parsec</code></pre>
-
-<p>Очередь задач — там же (таблица <code>CARDINDEV</code>).</p>
+<p>UI: <code>http://&lt;host&gt;/parsec</code></p>
 
 <a class="top-link" href="#top">↑ к оглавлению</a>
 
-<!-- ============================================================= -->
-<h2 id="stop">9. Как остановить массовый прогон</h2>
-
-<p><kbd>Ctrl</kbd>+<kbd>C</kbd> в окне консоли. Все уже созданные задачи
-в <code>CARDINDEV</code> останутся. Если их надо откатить:</p>
-
-<pre><code>-- Посмотреть, что создалось
-SELECT cd.id_cardindev, cd.operation, cd.id_card, cd.id_pep, cd.time_stamp
-FROM cardindev cd
-WHERE cd.time_stamp &gt;= '2026-09-14'
-ORDER BY cd.id_cardindev DESC;
-
--- Удалить задачи конкретной операции, созданные после определённого времени
-DELETE FROM cardindev cd
-WHERE cd.operation IN (3, 35)
-  AND cd.time_stamp &gt;= '2026-09-14';
-
--- Или снести всё (аккуратно!)
-DELETE FROM cardindev;</code></pre>
-
-<div class="callout danger">
-  Перед удалением — сделайте бэкап таблицы <code>CARDINDEV</code>.
-</div>
-
-<a class="top-link" href="#top">↑ к оглавлению</a>
-
-<!-- ============================================================= -->
-<h2 id="history">10. Версии и изменения</h2>
-
-<table>
-  <thead>
-    <tr>
-      <th style="width:80px;">Версия</th>
-      <th style="width:130px;">Дата</th>
-      <th>Что сделано</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1.0</td>
-      <td>2026-09-14</td>
-      <td>Первая версия документации по четырём задачам</td>
-    </tr>
-  </tbody>
-</table>
+<!-- ================================================ -->
+<h2 id="see">10. См. также</h2>
+<ul>
+  <li><code>PARSEC_TASKS_README.htm</code> — описание задач сверки</li>
+  <li><code>parsec/history.txt</code> — история версий</li>
+  <li><code>parsec/sql/*.sql</code> — исходники триггеров</li>
+  <li><code>ParsecIntegrationDescription_20230113.pdf</code> — официальная документация Parsec</li>
+</ul>
 
 <hr>
 <p style="text-align:center; color: var(--muted); font-size:13px;">
-  Модуль Parsec · документация задач сверки · 2026
+  Модуль Parsec · документация тестирования · 2026
 </p>
 
 </main>
 </div>
+
+<script>
+(function () {
+  var btn = document.getElementById('to-top');
+  if (!btn) return;
+
+  function update() {
+    if (window.scrollY > 200) {
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  }
+
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+
+  btn.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+</script>
 </body>
 </html>

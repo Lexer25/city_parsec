@@ -464,4 +464,248 @@ class Model_ParsecTest extends Model
     {
         return array('ok' => false, 'error' => $message, 'status' => $status);
     }
+
+
+
+public function del_org(array $p)
+{
+    $guid = trim((string) Arr::get($p, 'guid', ''));
+
+    if ($guid === '') {
+        return $this->_err('406 Параметр guid обязателен', 400);
+    }
+
+    $id_org = $this->find_org_id($guid);
+    if ($id_org === null) {
+        return $this->_err('411 Организация не найдена: ' . $guid, 404);
+    }
+
+    $before = $this->max_cardindev_id();
+
+    $sql = 'DELETE FROM ORGANIZATION WHERE ID_ORG = ' . (int) $id_org;
+
+    try {
+        DB::query(Database::DELETE, $sql)->execute($this->_db);
+    } catch (Exception $e) {
+        return $this->_err('418 DELETE ORGANIZATION: ' . $e->getMessage(), 500);
+    }
+
+    return array(
+        'ok'            => true,
+        'operation'     => 'del_org',
+        'id_org'        => $id_org,
+        'guid'          => $guid,
+        'cardindev_new' => $this->new_cardindev($before),
+    );
+}
+
+public function del_person(array $p)
+{
+    $guid = trim((string) Arr::get($p, 'guid', ''));
+
+    if ($guid === '') {
+        return $this->_err('430 Параметр guid обязателен', 400);
+    }
+
+    $id_pep = $this->find_pep_id($guid);
+    if ($id_pep === null) {
+        return $this->_err('435 Персона не найдена: ' . $guid, 404);
+    }
+
+    $before = $this->max_cardindev_id();
+
+    $sql = 'DELETE FROM PEOPLE WHERE ID_PEP = ' . (int) $id_pep;
+
+    try {
+        DB::query(Database::DELETE, $sql)->execute($this->_db);
+    } catch (Exception $e) {
+        return $this->_err('442 DELETE PEOPLE: ' . $e->getMessage(), 500);
+    }
+
+    return array(
+        'ok'            => true,
+        'operation'     => 'del_person',
+        'id_pep'        => $id_pep,
+        'guid'          => $guid,
+        'cardindev_new' => $this->new_cardindev($before),
+    );
+}
+
+
+public function del_card(array $p)
+{
+    $pep_guid = trim((string) Arr::get($p, 'pep_guid', ''));
+    $card     = trim((string) Arr::get($p, 'card', ''));
+
+    if ($pep_guid === '' || $card === '') {
+        return $this->_err('455 Параметры pep_guid и card обязательны', 400);
+    }
+    if (!ctype_digit($card)) {
+        return $this->_err('460 card должен быть числом', 400);
+    }
+
+    $card_dec = (int) $card;
+
+    $id_pep = $this->find_pep_id($pep_guid);
+    if ($id_pep === null) {
+        return $this->_err('465 Персона не найдена: ' . $pep_guid, 404);
+    }
+
+    $before = $this->max_cardindev_id();
+
+    $sql = 'DELETE FROM CARD WHERE ID_PEP = ' . (int) $id_pep
+         . ' AND ID_CARD = ' . $card_dec;
+
+    try {
+        DB::query(Database::DELETE, $sql)->execute($this->_db);
+    } catch (Exception $e) {
+        return $this->_err('472 DELETE CARD: ' . $e->getMessage(), 500);
+    }
+
+    return array(
+        'ok'            => true,
+        'operation'     => 'del_card',
+        'id_pep'        => $id_pep,
+        'pep_guid'      => $pep_guid,
+        'card'          => $card_dec,
+        'card_hex'      => strtoupper(str_pad(dechex($card_dec), 8, '0', STR_PAD_LEFT)),
+        'cardindev_new' => $this->new_cardindev($before),
+    );
+}
+
+public function del_access(array $p)
+{
+    $pep_guid      = trim((string) Arr::get($p, 'pep_guid', ''));
+    $accessname_id = (int) Arr::get($p, 'accessname_id', 0);
+
+    if ($pep_guid === '' || $accessname_id <= 0) {
+        return $this->_err('480 Параметры pep_guid и accessname_id обязательны', 400);
+    }
+
+    $id_pep = $this->find_pep_id($pep_guid);
+    if ($id_pep === null) {
+        return $this->_err('485 Персона не найдена: ' . $pep_guid, 404);
+    }
+
+    $before = $this->max_cardindev_id();
+
+    $sql = 'DELETE FROM SS_ACCESSUSER WHERE ID_PEP = ' . (int) $id_pep
+         . ' AND ID_ACCESSNAME = ' . (int) $accessname_id;
+
+    try {
+        DB::query(Database::DELETE, $sql)->execute($this->_db);
+    } catch (Exception $e) {
+        return $this->_err('492 DELETE SS_ACCESSUSER: ' . $e->getMessage(), 500);
+    }
+
+    return array(
+        'ok'            => true,
+        'operation'     => 'del_access',
+        'id_pep'        => $id_pep,
+        'pep_guid'      => $pep_guid,
+        'accessname_id' => $accessname_id,
+        'cardindev_new' => $this->new_cardindev($before),
+    );
+}
+
+public function update_person(array $p)
+{
+    $guid = trim((string) Arr::get($p, 'guid', ''));
+
+    if ($guid === '') {
+        return $this->_err('505 Параметр guid обязателен', 400);
+    }
+
+    $id_pep = $this->find_pep_id($guid);
+    if ($id_pep === null) {
+        return $this->_err('510 Персона не найдена: ' . $guid, 404);
+    }
+
+    $set = array();
+    if (($v = Arr::get($p, 'surname'))    !== null) $set[] = 'SURNAME = '    . $this->_str($v);
+    if (($v = Arr::get($p, 'name'))       !== null) $set[] = 'NAME = '       . $this->_str($v);
+    if (($v = Arr::get($p, 'patronymic')) !== null) $set[] = 'PATRONYMIC = ' . $this->_str($v);
+    if (($v = Arr::get($p, 'tabnum'))     !== null) $set[] = 'TABNUM = '     . $this->_str($v);
+    if (($v = Arr::get($p, 'org_guid'))   !== null && $v !== '') {
+        $new_id_org = $this->find_org_id($v);
+        if ($new_id_org === null) {
+            return $this->_err('518 Организация не найдена: ' . $v, 404);
+        }
+        $set[] = 'ID_ORG = ' . (int) $new_id_org;
+    }
+
+    if (empty($set)) {
+        return $this->_err('523 Не передано ни одного поля для обновления', 400);
+    }
+
+    $before = $this->max_cardindev_id();
+
+    $sql = 'UPDATE PEOPLE SET ' . implode(', ', $set) . ' WHERE ID_PEP = ' . (int) $id_pep;
+
+    try {
+        DB::query(Database::UPDATE, $sql)->execute($this->_db);
+    } catch (Exception $e) {
+        return $this->_err('530 UPDATE PEOPLE: ' . $e->getMessage(), 500);
+    }
+
+    return array(
+        'ok'            => true,
+        'operation'     => 'update_person',
+        'id_pep'        => $id_pep,
+        'guid'          => $guid,
+        'cardindev_new' => $this->new_cardindev($before),
+    );
+}
+
+	public function update_org(array $p)
+	{
+		$guid = trim((string) Arr::get($p, 'guid', ''));
+
+		if ($guid === '') {
+			return $this->_err('540 Параметр guid обязателен', 400);
+		}
+
+		$id_org = $this->find_org_id($guid);
+		if ($id_org === null) {
+			return $this->_err('545 Организация не найдена: ' . $guid, 404);
+		}
+
+		$set = array();
+		if (($v = Arr::get($p, 'name')) !== null) {
+			$set[] = 'NAME = ' . $this->_str($v);
+		}
+		if (($v = Arr::get($p, 'parent_guid')) !== null && $v !== '') {
+			$new_parent_id = $this->find_org_id($v);
+			if ($new_parent_id === null) {
+				return $this->_err('553 Родитель не найден: ' . $v, 404);
+			}
+			$set[] = 'ID_PARENT = ' . (int) $new_parent_id;
+		}
+		if (($v = Arr::get($p, 'divcode')) !== null) {
+			$set[] = 'DIVCODE = ' . $this->_str($v);
+		}
+
+		if (empty($set)) {
+			return $this->_err('561 Не передано ни одного поля для обновления', 400);
+		}
+
+		$before = $this->max_cardindev_id();
+
+		$sql = 'UPDATE ORGANIZATION SET ' . implode(', ', $set) . ' WHERE ID_ORG = ' . (int) $id_org;
+
+		try {
+			DB::query(Database::UPDATE, $sql)->execute($this->_db);
+		} catch (Exception $e) {
+			return $this->_err('568 UPDATE ORGANIZATION: ' . $e->getMessage(), 500);
+		}
+
+		return array(
+			'ok'            => true,
+			'operation'     => 'update_org',
+			'id_org'        => $id_org,
+			'guid'          => $guid,
+			'cardindev_new' => $this->new_cardindev($before),
+		);
+	}
+
 }

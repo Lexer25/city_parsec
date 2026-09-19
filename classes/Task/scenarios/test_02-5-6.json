@@ -1,0 +1,28 @@
+{
+    "name": "ДОбавление и удаление организаций",
+    "description": "Добавить организацию, затем удалить её. Проверяет триггеры 5 и 6.",
+    "steps": [
+        {
+            "id": "org",
+            "description": "Добавить организацию",
+            "action": "add_org",
+            "params": {
+                "name": "TEST-ORG-{suffix}",
+                "guid": "TEST-ORG-{suffix}",
+                "parent_guid": ""
+            },
+            "expect_ops": [5]
+        },
+        {
+            "id": "org2",
+            "description": "Удалить организацию",
+            "action": "del_org",
+             "params": {
+                "guid": "{ctx.org.guid}"
+            },
+            "expect_ops": [6]
+        }
+        
+       
+    ]
+}

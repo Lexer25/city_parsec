@@ -1,0 +1,51 @@
+{
+    "name": "Базовый тест триггеров",
+    "description": "Организация > персона > карта > категория доступа. Порядок важен: триггер 7 требует наличия активной карты у персоны.",
+    "steps": [
+        {
+            "id": "org",
+            "description": "Добавить организацию",
+            "action": "add_org",
+            "params": {
+                "name": "TEST-ORG-{suffix}",
+                "guid": "TEST-ORG-{suffix}",
+                "parent_guid": ""
+            },
+            "expect_ops": [5]
+        },
+        {
+            "id": "people",
+            "description": "Добавить персону в эту организацию",
+            "action": "add_person",
+            "params": {
+                "surname": "Тестов",
+                "name": "Иван",
+                "patronymic": "Тестович",
+                "guid": "TEST-PEP-{suffix}",
+                "org_guid": "{ctx.org.guid}",
+                "tabnum": "T-{suffix}"
+            },
+            "expect_ops": [3]
+        },
+        {
+            "id": "card",
+            "description": "Выдать карту персоне",
+            "action": "add_card",
+            "params": {
+                "pep_guid": "{ctx.people.guid}",
+                "card": "{cardnum}"
+            },
+            "expect_ops": [9]
+        },
+        {
+            "id": "access",
+            "description": "Выдать категорию доступа персоне",
+            "action": "add_access",
+            "params": {
+                "pep_guid": "{ctx.people.guid}",
+                "accessname_id": 64
+            },
+            "expect_ops": [7]
+        }
+    ]
+}

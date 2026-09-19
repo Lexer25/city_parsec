@@ -1,0 +1,49 @@
+{
+    "name": "Добавление и удаление организации и персоны",
+    "description": "Организация → персона в ней → удаление персоны → удаление организации. Проверяет триггеры 5, 3, 4, 6.",
+    "steps": [
+        {
+            "id": "org",
+            "description": "Добавить организацию",
+            "action": "add_org",
+            "params": {
+                "name": "TEST-ORG-{suffix}",
+                "guid": "TEST-ORG-{suffix}",
+                "parent_guid": ""
+            },
+            "expect_ops": [5]
+        },
+        {
+            "id": "pep",
+            "description": "Добавить персону в эту организацию",
+            "action": "add_person",
+            "params": {
+                "surname": "Тестов",
+                "name": "Иван",
+                "patronymic": "Тестович",
+                "guid": "TEST-PEP-{suffix}",
+                "org_guid": "{ctx.org.guid}",
+                "tabnum": "T-{suffix}"
+            },
+            "expect_ops": [3]
+        },
+        {
+            "id": "pep_del",
+            "description": "Удалить персону",
+            "action": "del_person",
+            "params": {
+                "guid": "{ctx.pep.guid}"
+            },
+            "expect_ops": [4]
+        },
+        {
+            "id": "org_del",
+            "description": "Удалить организацию",
+            "action": "del_org",
+            "params": {
+                "guid": "{ctx.org.guid}"
+            },
+            "expect_ops": [6]
+        }
+    ]
+}
