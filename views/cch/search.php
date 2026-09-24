@@ -103,6 +103,111 @@ echo View::factory('parsec/_mock_alert');
         <?php } ?>
     </div>
 </div>
+
+
+<?php
+// ===== БЛОК: ПОИСК GUID ПО ВСЕМ СУЩНОСТЯМ =====
+?>
+
+<div class="panel panel-success col-md-10 col-md-offset-1">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <span class="glyphicon glyphicon-search"></span>
+            Поиск GUID по всем сущностям Parsec
+        </h3>
+    </div>
+    <div class="panel-body">
+        <p>
+            Проверяет указанный GUID во всех доступных сущностях:
+            персона, организация, территория, расписание,
+            категория доступа, роль группового прохода, унаследованные группы.
+        </p>
+
+        <form role="form" action="SearchGuid" method="POST">
+            <div class="form-group">
+                <label for="search_guid">GUID для поиска</label>
+                <input type="text" name="guid" id="search_guid"
+                       class="form-control"
+                       placeholder="Например: 441dc23b-1111-44d2-a999-1379ff028067"
+                       value="<?php echo htmlspecialchars(
+                           isset($guid) ? $guid : '441dc23b-1111-44d2-a999-1379ff028067',
+                           ENT_QUOTES, 'UTF-8'
+                       ); ?>"/>
+            </div>
+            <button type="submit" class="btn btn-success">Искать</button>
+        </form>
+
+        <?php
+        // Если результат — массив с ключом 'checks', это наш поиск
+        if (isset($result) && is_array($result) && isset($result['checks'])):
+            $report = $result;
+        ?>
+            <hr>
+            <h4>
+                Результат поиска GUID
+                <code><?php echo htmlspecialchars($report['guid'], ENT_QUOTES, 'UTF-8'); ?></code>
+            </h4>
+
+            <?php if (!empty($report['summary'])): ?>
+                <div class="alert alert-success">
+                    <strong>GUID найден в:</strong>
+                    <ul style="margin-bottom: 0;">
+                        <?php foreach ($report['summary'] as $s): ?>
+                            <li><?php echo htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php else: ?>
+                <div class="alert alert-warning">
+                    <strong>GUID не найден ни в одной из проверенных сущностей.</strong>
+                </div>
+            <?php endif; ?>
+
+            <table class="table table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Проверка</th>
+                        <th style="width: 100px;">Найдено</th>
+                        <th>Детали</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $n = 0; foreach ($report['checks'] as $c): $n++; ?>
+                        <tr class="<?php
+                            echo $c['error'] !== '' ? 'danger'
+                               : ($c['found'] ? 'success' : '');
+                        ?>">
+                            <td><?php echo $n; ?></td>
+                            <td><?php echo htmlspecialchars($c['name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td>
+                                <?php if ($c['error'] !== ''): ?>
+                                    <span class="label label-danger">ОШИБКА</span>
+                                <?php elseif ($c['found']): ?>
+                                    <span class="label label-success">ДА</span>
+                                <?php else: ?>
+                                    <span class="label label-default">НЕТ</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ($c['error'] !== ''): ?>
+                                    <span class="text-danger">
+                                        <?php echo htmlspecialchars($c['error'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </span>
+                                <?php else: ?>
+                                    <?php echo htmlspecialchars($c['details'], ENT_QUOTES, 'UTF-8'); ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+</div>
+
+
+
  <div class="panel panel-primary col-md-10 col-md-offset-1">
   <div class="panel-heading row">
     <h3 class="panel-title ">GetObjectName Определение типа сущности по GUID (21.03.2026)</h3>
@@ -349,6 +454,27 @@ echo View::factory('parsec/_mock_alert');
 	<button type="submit" class="btn btn-default">Отправить</button>
 </form>
 
+</div>
+
+
+<!-- ===== БЛОК: ПОДСКАЗКА ДЛЯ ЗАПУСКА ЗАДАЧИ ПОИСКА GUID ===== -->
+<div class="panel panel-default col-md-10 col-md-offset-1">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <span class="glyphicon glyphicon-search"></span>
+            Поиск GUID по всем сущностям (Minion-задача)
+        </h3>
+    </div>
+    <div class="panel-body">
+        <p>
+            Для поиска GUID по всем сущностям Parsec запустите из консоли:
+        </p>
+        <pre>parsecSearchGuid.bat &lt;GUID&gt;</pre>
+        <p class="text-muted">
+            Например:
+            <code>parsecSearchGuid.bat 441dc23b-1111-44d2-a999-1379ff028067</code>
+        </p>
+    </div>
 </div>
 
 

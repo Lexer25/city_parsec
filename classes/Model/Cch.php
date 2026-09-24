@@ -794,4 +794,159 @@ public function isMockMode()
 
 			return $result;
 		}
+		
+		    /**
+     * Получить список ролей группового прохода.
+     * Используется для поиска GUID в списке ролей.
+     *
+     * @param string $session_id
+     * @return mixed
+     */
+    public function GetPassageRoles($session_id)
+    {
+        if (empty($session_id)) {
+            return (object) array(
+                'error'   => true,
+                'message' => 'Не указан ID сессии'
+            );
+        }
+
+        $result = $this->_call_soap('GetPassageRoles', array(
+            'sessionID' => $session_id,
+        ));
+
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Получить территорию по GUID.
+     *
+     * @param string $session_id
+     * @param string $territory_id
+     * @return mixed
+     */
+    public function GetTerritory($session_id, $territory_id)
+    {
+        if (empty($session_id) || empty($territory_id)) {
+            return (object) array(
+                'error'   => true,
+                'message' => 'Не указан ID сессии или ID территории'
+            );
+        }
+
+        $result = $this->_call_soap('GetTerritory', array(
+            'sessionID'   => $session_id,
+            'territoryID' => $territory_id,
+        ));
+
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Получить расписание по GUID.
+     *
+     * @param string $session_id
+     * @param string $schedule_id
+     * @return mixed
+     */
+    public function GetSchedule($session_id, $schedule_id)
+    {
+        if (empty($session_id) || empty($schedule_id)) {
+            return (object) array(
+                'error'   => true,
+                'message' => 'Не указан ID сессии или ID расписания'
+            );
+        }
+
+        $result = $this->_call_soap('GetSchedule', array(
+            'sessionID'  => $session_id,
+            'scheduleID' => $schedule_id,
+        ));
+
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+
+        return $result;
+    }
+	
+
+
+
+    /**
+     * Получить список праздников.
+     */
+    public function GetHolidays($session_id)
+    {
+        if (empty($session_id)) {
+            return (object) array(
+                'error'   => true,
+                'message' => 'Не указан ID сессии'
+            );
+        }
+
+        $result = $this->_call_soap('GetHolidays', array(
+            'sessionID' => $session_id,
+        ));
+
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Получить список расписаний доступа.
+     */
+    public function GetAccessSchedules($session_id)
+    {
+        if (empty($session_id)) {
+            return (object) array(
+                'error'   => true,
+                'message' => 'Не указан ID сессии'
+            );
+        }
+
+        $result = $this->_call_soap('GetAccessSchedules', array(
+            'sessionID' => $session_id,
+        ));
+
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Получить список расписаний рабочего времени.
+     */
+    public function GetWorktimeSchedules($session_id)
+    {
+        if (empty($session_id)) {
+            return (object) array(
+                'error'   => true,
+                'message' => 'Не указан ID сессии'
+            );
+        }
+
+        $result = $this->_call_soap('GetWorktimeSchedules', array(
+            'sessionID' => $session_id,
+        ));
+
+        if (isset($result->error) && $result->error) {
+            return $result;
+        }
+
+        return $result;
+    }
 }

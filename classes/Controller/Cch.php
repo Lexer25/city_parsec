@@ -896,5 +896,256 @@ public function action_compareOrg()
 		$soap_config = (array) Kohana::$config->load('soap.parsec');
 		return isset($soap_config['mock_mode']) && $soap_config['mock_mode'] === true;
 	}
+	
+	
+	    /**
+     * Поиск GUID по всем сущностям Parsec.
+     * Последовательно проверяет: персона, организация, территория, расписание,
+     * роль группового прохода, категория доступа (группа), унаследованные группы.
+     *
+     * Результат — массив отчётов по каждой проверке.
+     */
+    public function action_SearchGuid()
+    {
+        if (!$this->_checkSession()) return;
+
+        $guid = strtoupper(trim((string) $this->request->post('guid')));
+
+        if ($guid === '') {
+            $content = View::factory('cch/search')
+                ->set('result', array(
+                    'error' => 'GUID не указан',
+                ))
+                ->set('guid', '');
+            $content = $this->_addErrorAlert($content);
+            $this->template->content = $content;
+            return;
+        }
+
+        $report = array(
+            'guid'    => $guid,
+            'checks'  => array(),
+            'summary' => array(),   // что нашли
+        );
+
+        // ---------- 1. Персона ----------
+        $r = $this->_cch_model->GetPerson($this->_session_id, $guid);
+        $report['checks'][] = $this->_check_result(
+            'Персона (GetPerson)',
+            $r,
+            'GetPersonResult',
+            function ($v) use ($guid) {
+                return 'ID=' . (isset($v->ID) ? $v->ID : '?')
+                     . ', ФИО='
+                     . trim(
+                         (isset($v->LAST_NAME)  ? $v->LAST_NAME  : '') . ' ' .
+                         (isset($v->FIRST_NAME) ? $v->FIRST_NAME : '') . ' ' .
+                         (isset($v->MIDDLE_NAME)? $v->MIDDLE_NAME: '')
+                     );
+            }
+        );
+
+        // ---------- 2. Организация ----------
+        $r = $this->_cch_model->GetOrgUnit($this->_session_id, $guid);
+        $report['checks'][] = $this->_check_result(
+            'Организация (GetOrgUnit)',
+            $r,
+            'GetOrgUnitResult',
+            function ($v) {
+                return 'ID=' . (isset($v->ID) ? $v->ID : '?')
+                     . ', NAME=' . (isset($v->NAME) ? $v->NAME : '?');
+            }
+        );
+
+        // ---------- 3. Территория ----------
+        $r = $this->_cch_model->GetTerritory($this->_session_id, $guid);
+        $report['checks'][] = $this->_check_result(
+            'Территория (GetTerritory)',
+            $r,
+            'GetTerritoryResult',
+            function ($v) {
+                return 'ID=' . (isset($v->ID) ? $v->ID : '?')
+                     . ', NAME=' . (isset($v->NAME) ? $v->NAME : '?')
+                     . ', TYPE=' . (isset($v->TYPE) ? $v->TYPE : '?');
+            }
+        );
+
+        // ---------- 4. Расписание ----------
+        $r = $this->_cch_model->GetSchedule($this->_session_id, $guid);
+        $report['checks'][] = $this->_check_result(
+            'Расписание (GetSchedule)',
+            $r,
+            'GetScheduleResult',
+            function ($v) {
+                return 'ID=' . (isset($v->ID) ? $v->ID : '?')
+                     . ', NAME=' . (isset($v->NAME) ? $v->NAME : '?');
+            }
+        );
+
+        // ---------- 5. Категория доступа (группа) ----------
+        $r = $this->_cch_model->GetAccessGroups($this->_session_id);
+        $report['checks'][] = $this->_check_in_list(
+            'Категория доступа (GetAccessGroups)',
+            $r,
+            'GetAccessGroupsResult',
+            $guid,
+            function ($item) {
+                return 'ID=' . (isset($item->ID) ? $item->ID : '?')
+                     . ', NAME=' . (isset($item->NAME) ? $item->NAME : '?');
+            }
+        );
+
+        // ---------- 6. Роль группового прохода ----------
+        $r = $this->_cch_model->GetPassageRoles($this->_session_id);
+        $report['checks'][] = $this->_check_in_list(
+            'Роль группового прохода (GetPassageRoles)',
+            $r,
+            'GetPassageRolesResult',
+            $guid,
+            function ($item) {
+                return 'ID=' . (isset($item->ID) ? $item->ID : '?')
+                     . ', NAME=' . (isset($item->NAME) ? $item->NAME : '?');
+            }
+        );
+
+        // ---------- 7. Унаследованные группы ----------
+        // У этой функции нет смысла искать GUID в ответе — она принимает GUID
+        // на вход. Но мы можем проверить, что GUID вообще является группой,
+        // и посмотреть, что она возвращает.
+        $r = $this->_cch_model->GetInheritedAccessGroups($this->_session_id, $guid);
+        $report['checks'][] = $this->_check_result(
+            'Унаследованные группы (GetInheritedAccessGroups)',
+            $r,
+            'GetInheritedAccessGroupsResult',
+            function ($v) {
+                if (is_array($v)) {
+                    return 'получено элементов: ' . count($v);
+                }
+                if (is_object($v)) {
+                    return 'объект: ' . json_encode($v);
+                }
+                return 'значение: ' . var_export($v, true);
+            }
+        );
+
+        // ---------- Сводка ----------
+        foreach ($report['checks'] as $c) {
+            if ($c['found']) {
+                $report['summary'][] = $c['name'] . ' — ' . $c['details'];
+            }
+        }
+
+        $content = View::factory('cch/search')
+            ->set('result', $report)
+            ->set('guid', $guid);
+        $content = $this->_addErrorAlert($content);
+        $this->template->content = $content;
+    }
+
+    /**
+     * Вспомогательный метод: анализ ответа «получить объект по GUID».
+     *
+     * @param string   $name       Название проверки
+     * @param mixed    $response   Ответ SOAP
+     * @param string   $result_key Ключ в ответе (например, GetPersonResult)
+     * @param callable $formatter  Функция форматирования найденного объекта
+     * @return array
+     */
+    protected function _check_result($name, $response, $result_key, $formatter)
+    {
+        $found   = false;
+        $details = '';
+        $error   = '';
+
+        if (isset($response->error) && $response->error) {
+            $error = isset($response->message) ? $response->message : 'SOAP error';
+        } else {
+            $value = isset($response->$result_key) ? $response->$result_key : null;
+
+            // Пустой ответ — объекта нет
+            if ($value === null) {
+                $details = 'объект не найден';
+            } elseif (is_array($value) && empty($value)) {
+                $details = 'объект не найден (пустой массив)';
+            } else {
+                $found   = true;
+                $details = $formatter($value);
+            }
+        }
+
+        return array(
+            'name'    => $name,
+            'found'   => $found,
+            'details' => $details,
+            'error'   => $error,
+        );
+    }
+
+    /**
+     * Вспомогательный метод: поиск GUID в списке объектов.
+     *
+     * @param string   $name       Название проверки
+     * @param mixed    $response   Ответ SOAP
+     * @param string   $result_key Ключ в ответе
+     * @param string   $guid       Искомый GUID
+     * @param callable $formatter  Форматирование найденного элемента
+     * @return array
+     */
+    protected function _check_in_list($name, $response, $result_key, $guid, $formatter)
+    {
+        $found   = false;
+        $details = '';
+        $error   = '';
+
+        if (isset($response->error) && $response->error) {
+            $error = isset($response->message) ? $response->message : 'SOAP error';
+        } else {
+            $list = isset($response->$result_key) ? $response->$result_key : null;
+
+            if ($list === null) {
+                $details = 'список пуст';
+            } else {
+                // Приводим к массиву
+                if (is_object($list)) {
+                    $list = (array) $list;
+                }
+                if (!is_array($list)) {
+                    $list = array($list);
+                }
+
+                // Если внутри есть обёртка (например, GetAccessGroupsResult[0] — массив)
+                $flat = array();
+                foreach ($list as $item) {
+                    if (is_array($item)) {
+                        foreach ($item as $sub) {
+                            $flat[] = $sub;
+                        }
+                    } else {
+                        $flat[] = $item;
+                    }
+                }
+
+                foreach ($flat as $item) {
+                    if (is_object($item) && isset($item->ID)
+                        && strtoupper(trim((string) $item->ID)) === $guid) {
+                        $found   = true;
+                        $details = $formatter($item);
+                        break;
+                    }
+                }
+
+                if (!$found) {
+                    $details = 'GUID не найден среди ' . count($flat) . ' элементов';
+                }
+            }
+        }
+
+        return array(
+            'name'    => $name,
+            'found'   => $found,
+            'details' => $details,
+            'error'   => $error,
+        );
+    }
 
 } // End cch
