@@ -15,16 +15,31 @@
  *   c:\xampp\php\php.exe c:\xampp\htdocs\city\modules\minion\minion --task=parsecSyncPeope
  *
  * Опции:
- *   --add         1|0   Ставить задачи (по умолчанию 0)
- *   --limit       N     Ограничить количество проверяемых персон (0 — без ограничений)
- *   --id_pep      N     Проверить только одну персону
- *   --verbose     1|0   Подробный вывод
+ *   --add          1|0   Ставить задачи (по умолчанию 0)
+ *   --id_pep_from  N     Нижняя граница id_pep (строго >). По умолчанию 1.
+ *   --limit        N     Ограничить количество проверяемых персон (0 — без ограничений)
+ *   --id_pep       N     Проверить только одну персону (перекрывает from/limit)
+ *   --verbose      1|0   Подробный вывод
  *
  * Формат лога — табличный, разделитель колонок "\t":
  *   счётчик | статус | ФИО | Artonit | Parsec | примечание
  *
- * @version 1.2.0
- * @date    2026-09-13
+ * @version 1.3.0
+ * @date    2026-09-23
+ 
+  :: Первые 10 персон, начиная с id_pep > 4 (т.е. 5..14)
+	minion --task=parsecSyncPeope --id_pep_from=4 --limit=10 --add=0
+
+	:: Следующая страница: продолжение с id_pep > 14
+	minion --task=parsecSyncPeope --id_pep_from=14 --limit=10 --add=0
+
+	:: Одна конкретная персона
+	minion --task=parsecSyncPeope --id_pep=42 --add=0
+
+	:: Все персоны (старое поведение, id_pep > 1)
+	minion --task=parsecSyncPeope --add=0
+
+
  */
 class Task_parsecSyncPeope extends Minion_Task
 {
@@ -33,10 +48,11 @@ class Task_parsecSyncPeope extends Minion_Task
      * Ключи без ведущих дефисов — так принято в Minion.
      */
     protected $_options = array(
-        'add'     => 0,     // ставить задачи интегратору
-        'limit'   => 0,     // 0 — без ограничения
-        'id_pep'  => 0,     // 0 — все персоны
-        'verbose' => 1,     // подробный вывод
+        'add'          => 0,   // ставить задачи интегратору
+        'id_pep_from'  => 1,   // нижняя граница id_pep (строго >)
+        'limit'        => 0,   // 0 — без ограничения
+        'id_pep'       => 0,   // 0 — все персоны (точечная проверка)
+        'verbose'      => 1,   // подробный вывод
     );
 
     /** @var Model_Cch */
@@ -50,15 +66,16 @@ class Task_parsecSyncPeope extends Minion_Task
 
     /** @var array */
     protected $_stats = array(
-        'total'        => 0,
-        'in_parsec'    => 0,
-        'not_in_parsec'=> 0,
-        'org_mismatch' => 0,
-        'org_match'    => 0,
-        'skipped'      => 0,
-        'errors'       => 0,
-        'tasks_added'  => 0,
-        'time'         => 0,
+        'total'         => 0,
+        'in_parsec'     => 0,
+        'not_in_parsec' => 0,
+        'org_mismatch'  => 0,
+        'org_match'     => 0,
+        'skipped'       => 0,
+        'errors'        => 0,
+        'tasks_added'   => 0,
+        'time'          => 0,
+        'last_id_pep'   => 0,
     );
 
     /** @var array */
@@ -70,15 +87,18 @@ class Task_parsecSyncPeope extends Minion_Task
 
     protected function _execute(array $params)
     {
-        $start_time = microtime(true);
+        $start_time  = microtime(true);
 
-        $add     = (int) Arr::get($params, 'add', 1) === 1;
-        $limit   = (int) Arr::get($params, 'limit', 0);
-        $id_pep  = (int) Arr::get($params, 'id_pep', 0);
-        $verbose = (int) Arr::get($params, 'verbose', 1) === 1;
+        $add         = (int) Arr::get($params, 'add', 1) === 1;
+        $id_pep_from = (int) Arr::get($params, 'id_pep_from', 1);
+        $limit       = (int) Arr::get($params, 'limit', 0);
+        $id_pep      = (int) Arr::get($params, 'id_pep', 0);
+        $verbose     = (int) Arr::get($params, 'verbose', 1) === 1;
 
         Minion_CLI::write('=== Сверка персон СКУД Артонит и Parsec ===');
         Minion_CLI::write('Режим добавления задач: ' . ($add ? 'ДА' : 'НЕТ'));
+        Minion_CLI::write('Стартовый id_pep (строго >): ' . $id_pep_from);
+
         if ($limit > 0) {
             Minion_CLI::write('Ограничение: ' . $limit . ' персон');
         }
@@ -115,7 +135,7 @@ class Task_parsecSyncPeope extends Minion_Task
         }
 
         // --- 4. Получение списка персон из Артонит ---
-        $people = $this->_get_people_list($id_pep, $limit);
+        $people = $this->_get_people_list($id_pep, $limit, $id_pep_from);
         if (empty($people)) {
             Minion_CLI::write('Нет персон для проверки.');
             return;
@@ -142,6 +162,14 @@ class Task_parsecSyncPeope extends Minion_Task
         $i = 0;
         foreach ($people as $row) {
             $i++;
+
+            // Запоминаем максимальный id_pep из обработанных —
+            // для постраничного обхода (следующий запуск --id_pep_from=$last_id_pep)
+            $cur_id = (int) Arr::get($row, 'ID_PEP');
+            if ($cur_id > $this->_stats['last_id_pep']) {
+                $this->_stats['last_id_pep'] = $cur_id;
+            }
+
             $this->_check_person($row, $add, $verbose, $i, count($people));
         }
 
@@ -246,13 +274,55 @@ class Task_parsecSyncPeope extends Minion_Task
     /**
      * Возвращает список персон из Артонит.
      *
-     * @param int $id_pep 0 — все
-     * @param int $limit  0 — без ограничения
+     * Поддерживает два режима:
+     *   1. Постраничный: id_pep_from + limit.
+     *      WHERE id_pep > :id_pep_from
+     *      SELECT FIRST :limit ...
+     *      ORDER BY id_pep
+     *
+     *   2. Точечный: id_pep.
+     *      WHERE id_pep = :id_pep (перекрывает id_pep_from и limit).
+     *
+     * @param int $id_pep      точечная проверка одной персоны (0 — не использовать)
+     * @param int $limit       сколько записей вернуть (0 — без ограничений)
+     * @param int $id_pep_from нижняя граница id_pep (строго >)
      * @return array
      */
-    protected function _get_people_list($id_pep = 0, $limit = 0)
+    protected function _get_people_list($id_pep = 0, $limit = 0, $id_pep_from = 1)
     {
-        $sql = 'SELECT p.id_pep,
+        // --- Точечный режим: одна персона ---
+        if ($id_pep > 0) {
+            $sql = 'SELECT p.id_pep,
+                           p.guid              AS pep_guid,
+                           p.surname,
+                           p.name,
+                           p.patronymic,
+                           p.id_org,
+                           o.guid              AS org_guid,
+                           o.name              AS org_name
+                    FROM people p
+                    LEFT JOIN organization o ON o.id_org = p.id_org
+                    WHERE p.guid IS NOT NULL
+                      AND p.id_pep = ' . (int) $id_pep . '
+                    ORDER BY p.id_pep';
+
+            try {
+                return DB::query(Database::SELECT, $sql)
+                    ->execute(Database::instance('fb'))
+                    ->as_array();
+            } catch (Exception $e) {
+                Minion_CLI::write('ОШИБКА SQL: ' . $e->getMessage());
+                return array();
+            }
+        }
+
+        // --- Постраничный режим ---
+        $first = '';
+        if ($limit > 0) {
+            $first = 'FIRST ' . (int) $limit . ' ';
+        }
+
+        $sql = 'SELECT ' . $first . 'p.id_pep,
                        p.guid              AS pep_guid,
                        p.surname,
                        p.name,
@@ -263,18 +333,8 @@ class Task_parsecSyncPeope extends Minion_Task
                 FROM people p
                 LEFT JOIN organization o ON o.id_org = p.id_org
                 WHERE p.guid IS NOT NULL
-                  AND p.id_pep > 1';
-
-        if ($id_pep > 0) {
-            $sql .= ' AND p.id_pep = ' . (int) $id_pep;
-        }
-
-        $sql .= ' ORDER BY p.id_pep';
-
-        if ($limit > 0) {
-            // Firebird: FIRST n — ставим сразу после SELECT
-            $sql = preg_replace('/^SELECT /', 'SELECT FIRST ' . (int) $limit . ' ', $sql);
-        }
+                  AND p.id_pep > ' . (int) $id_pep_from . '
+                ORDER BY p.id_pep';
 
         try {
             return DB::query(Database::SELECT, $sql)
@@ -362,16 +422,20 @@ class Task_parsecSyncPeope extends Minion_Task
         if ($person === null) {
             $this->_stats['not_in_parsec']++;
 
-            if ($verbose) {
-                Minion_CLI::write($this->_log_row(
-                    $prefix,
-                    'НЕТ В PARSEC',
-                    $fio,
-                    '',
-                    '',
-                    ''
-                ));
-            }
+               $artonit_display = $org_guid !== ''
+					? 'Artonit org_guid: ' . $org_guid . ' (' . $org_name . ')'
+					: 'нет GUID организации';
+
+				if ($verbose) {
+					Minion_CLI::write($this->_log_row(
+						$prefix,
+						'НЕТ В PARSEC',
+						$fio,
+						$artonit_display,          // < что искали в Parsec
+						'',
+						'pep_guid: ' . $pep_guid  // < по какому GUID искали
+					));
+				}
 
             if ($add) {
                 if ($this->_add_task_person($id_pep, 3)) {
@@ -666,6 +730,7 @@ class Task_parsecSyncPeope extends Minion_Task
         Minion_CLI::write('Пропущено:                  ' . $this->_stats['skipped']);
         Minion_CLI::write('Ошибок SOAP/ответа:         ' . $this->_stats['errors']);
         Minion_CLI::write('Создано задач интегратору:  ' . $this->_stats['tasks_added']);
+        Minion_CLI::write('Последний обработанный id_pep: ' . $this->_stats['last_id_pep']);
         Minion_CLI::write('Время выполнения:           ' . $this->_stats['time'] . ' сек');
         Minion_CLI::write('');
 

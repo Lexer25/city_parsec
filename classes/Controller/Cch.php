@@ -340,7 +340,21 @@ public function _mainView()
         $this->template->content = $content;
     }
     
-    protected function action_GetInheritedAccessGroups()
+    protected function action_GetOrgUnitSubItemsHierarchyWithPersons()
+    {
+        if (!$this->_checkSession()) return;
+        
+        $org_guid = $this->request->post('guid_access');
+        $GetOrgUnitSubItemsHierarchyWithPersons = $this->_cch_model->GetOrgUnitSubItemsHierarhyWithPersons($this->_session_id, $org_guid);
+        $content = View::factory('cch/search')
+            ->set('result', $GetOrgUnitSubItemsHierarchyWithPersons)
+            ->set('org_guid', $org_guid);
+        $content = $this->_addErrorAlert($content);
+        $this->template->content = $content;
+    }
+	
+	
+	protected function action_GetInheritedAccessGroups()
     {
         if (!$this->_checkSession()) return;
         
@@ -352,6 +366,9 @@ public function _mainView()
         $content = $this->_addErrorAlert($content);
         $this->template->content = $content;
     }
+	
+	
+	
     
     protected function _search_card_from_post()
     {

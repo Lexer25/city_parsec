@@ -764,4 +764,34 @@ public function isMockMode()
     return isset($this->_soap_config['mock_mode']) 
         && $this->_soap_config['mock_mode'] === true;
 }
+
+
+		/**
+		 * Получить полную иерархию подразделений с персоналом,
+		 * начиная с указанного подразделения.
+		 *
+		 * @param string $session_id
+		 * @param string $org_unit_id GUID подразделения
+		 * @return mixed
+		 */
+		public function GetOrgUnitSubItemsHierarhyWithPersons($session_id, $org_unit_id)
+		{
+			if (empty($session_id) || empty($org_unit_id)) {
+				return (object) array(
+					'error'   => true,
+					'message' => 'Не указан ID сессии или ID организации'
+				);
+			}
+
+			$result = $this->_call_soap('GetOrgUnitSubItemsHierarhyWithPersons', array(
+				'sessionID' => $session_id,
+				'orgUnitID' => $org_unit_id,
+			));
+
+			if (isset($result->error) && $result->error) {
+				return $result;
+			}
+
+			return $result;
+		}
 }

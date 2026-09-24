@@ -39,6 +39,16 @@ echo View::factory('parsec/_mock_alert');
  }
  
  
+ if(isset($org_guid)){
+	 
+ } else {
+	 
+	 $org_guid='7c8f882a-35cd-48f2-9cc2-a2618d3bbdcc';
+ }
+ 
+ 
+ 
+ 
  if(isset($guid)){
 	 
  } else {
@@ -159,6 +169,21 @@ echo View::factory('parsec/_mock_alert');
  
 <div class="panel panel-primary col-md-10 col-md-offset-1">
   <div class="panel-heading row">
+    <h3 class="panel-title ">GetOrgUnitSubItemsHierarchyWithPersons Получить полную иерархию подразделений с персоналом, * начиная с указанного подразделения</h3>
+  </div>
+	<form role="form" action="GetOrgUnitSubItemsHierarchyWithPersons" method="POST">
+		<div class="form-group">
+			<label for="actionName">GUID организации</label>
+			<input type="text" name="guid_access" class="form-control"  placeholder="GUID организации" value="<?php echo $org_guid;?>"/>
+		</div>
+		<button type="submit" class="btn btn-default">Отправить</button>
+	</form>
+</div>
+
+
+
+<div class="panel panel-primary col-md-10 col-md-offset-1">
+  <div class="panel-heading row">
     <h3 class="panel-title ">GetInheritedAccessGroups получить унаследованные категории доступа (21.03.2026)</h3>
   </div>
 	<form role="form" action="GetInheritedAccessGroups" method="POST">
@@ -169,6 +194,8 @@ echo View::factory('parsec/_mock_alert');
 		<button type="submit" class="btn btn-default">Отправить</button>
 	</form>
 </div>
+
+
 
 
 
