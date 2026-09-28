@@ -21,6 +21,12 @@ $current_action = Request::current()->action();
                     <span class="glyphicon glyphicon-search"></span> Отладка
                 </a>
             </li>
+			<li role="presentation" class="<?php echo ($current_uri == 'parsecrunner') ? 'active' : ''; ?>">
+				<a href="<?php echo URL::site('parsecrunner'); ?>">
+					<span class="glyphicon glyphicon-play-circle"></span> Задачи
+				</a>
+			</li>
+			
         </ul>
     </div>
 </div>

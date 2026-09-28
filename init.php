@@ -21,6 +21,10 @@ Kohana::$config->load('menu')
 			'config' => array(
                 'title' => 'Отладка',
                 'url' => 'cch/search'
+            ),
+			'parsecrunner' => array(
+                'title' => 'Задачи',
+                'url' => 'parsecrunner'
             )
 			
         )
@@ -30,5 +34,12 @@ Kohana::$config->load('menu')
 Route::set('parsec_test', 'parsectest(/<action>)')
     ->defaults(array(
         'controller' => 'ParsecTest',
+        'action'     => 'index',
+    ));
+	
+	
+Route::set('parsec_runner', 'parsecrunner(/<action>(/<id>))')
+    ->defaults(array(
+        'controller' => 'ParsecRunner',
         'action'     => 'index',
     ));
