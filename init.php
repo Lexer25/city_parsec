@@ -25,6 +25,10 @@ Kohana::$config->load('menu')
 			'parsecrunner' => array(
                 'title' => 'Задачи',
                 'url' => 'parsecrunner'
+            ),
+			'ParsecTest' => array(
+                'title' => 'ParsecTest',
+                'url' => 'ParsecTest'
             )
 			
         )
