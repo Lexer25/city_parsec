@@ -253,7 +253,8 @@ class Task_parsecTestTriggers extends Minion_Task
 
     protected function _load_scenario($name)
     {
-        if ($name === 'basic' || $name === '') {
+       // if ($name === 'basic' || $name === '') {
+        if ($name === '') {
             return $this->_default_scenario();
         }
 

@@ -7,8 +7,8 @@
             "description": "Добавить организацию",
             "action": "add_org",
             "params": {
-                "name": "TEST-ORG-{suffix}",
-                "guid": "TEST-ORG-{suffix}",
+                "name": "TEST-ORG_basic-{suffix}",
+                "guid": "TEST-ORG_basic-{suffix}",
                 "parent_guid": ""
             },
             "expect_ops": [5]
