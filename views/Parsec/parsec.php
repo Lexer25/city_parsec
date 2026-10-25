@@ -128,9 +128,9 @@
                         <thead>
                             <tr class="active">
                                 <th class="text-center">ID</th>
-                                <th class="text-center">Что</th>
-                                <th class="text-center">Кому</th>
                                 <th class="text-center">Операция</th>
+                                <th class="text-center">Кому</th>
+                                <th class="text-center">Что</th>
                                 <th class="text-center">Организация</th>
                                 <th class="text-center">Попытки</th>
                                 <th class="text-center">Для кого</th>
@@ -153,16 +153,16 @@
                         <tbody class="filters-row">
                             <tr>
                                 <th><input type="text" class="form-control input-sm column-filter" data-column="0" placeholder="ID"></th>
-                                <th><input type="text" class="form-control input-sm column-filter" data-column="1" placeholder="GUID"></th>
-                                <th><input type="text" class="form-control input-sm column-filter" data-column="2" placeholder="ID_PEP"></th>
                                 <th>
-                                    <select class="form-control input-sm column-filter" data-column="3" data-type="select">
+                                    <select class="form-control input-sm column-filter" data-column="1" data-type="select">
                                         <option value="">Все операции</option>
                                         <?php foreach ($operatiion_name as $op_id => $op_name): ?>
                                         <option value="<?php echo $op_id; ?>"><?php echo $op_name; ?> (<?php echo $op_id; ?>)</option>
                                         <?php endforeach; ?>
                                     </select>
                                 </th>
+                                <th><input type="text" class="form-control input-sm column-filter" data-column="2" placeholder="ID_PEP"></th>
+                                <th><input type="text" class="form-control input-sm column-filter" data-column="3" placeholder="GUID"></th>
                                 <th><input type="text" class="form-control input-sm column-filter" data-column="4" placeholder="Организация"></th>
                                 <th><input type="text" class="form-control input-sm column-filter" data-column="5" placeholder="Попытки"></th>
                                 <th>
@@ -184,10 +184,7 @@
                             <?php foreach ($raw_data as $row): ?>
                             <tr>
                                 <td><?php echo Form::hidden('id_cardindev[' . $row['id'] . ']', $row['id']); ?><?php echo $row['id']; ?></td>
-                                <td><?php echo $row['id_card']; 
-                                
-                                    if(($row['operation'] == 9)||($row['operation'] == 10)) echo '<br>(0x'.str_pad(dechex($row['id_card']), 8, "0", STR_PAD_LEFT).')';
-                                ?></td>
+                                <td><?php echo $row['operation_name'] . ' (' . $row['operation'] . ')'; ?></td>
                                 <td><?php
                                     if (isset($row['id_pep']) && $row['id_pep'] !== '') {
                                         echo htmlspecialchars($row['id_pep'], ENT_QUOTES, 'UTF-8');
@@ -195,7 +192,10 @@
                                         //echo 'Нет в Артонит';
                                     }
                                 ?></td>
-                                <td><?php echo $row['operation_name'] . ' (' . $row['operation'] . ')'; ?></td>
+                                <td><?php echo $row['id_card']; 
+                                
+                                    if(($row['operation'] == 9)||($row['operation'] == 10)) echo '<br>(0x'.str_pad(dechex($row['id_card']), 8, "0", STR_PAD_LEFT).')';
+                                ?></td>
                                 <td><?php echo htmlspecialchars($row['org_name'], ENT_QUOTES, 'UTF-8'); ?></td>
                                 <td><?php echo $row['attempts']; ?></td>
                                 <td><?php echo htmlspecialchars($row['dest'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -250,7 +250,7 @@ $(document).ready(function() {
                 if (filterValue && filterValue !== '') {
                     var cellText = $(this).text().toLowerCase();
                     
-                    if (index == 3) {
+                    if (index == 1) {
                         var opMatch = cellText.match(/\((\d+)\)/);
                         var opCode = opMatch ? opMatch[1] : '';
                         if (filterValue !== opCode) {

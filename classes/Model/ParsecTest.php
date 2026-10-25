@@ -173,8 +173,8 @@ class Model_ParsecTest extends Model
         $before = $this->max_cardindev_id();
 
         // ACTIVE — зарезервированное слово Firebird, обязательно в кавычках
-        $sql = 'INSERT INTO CARD (ID_DB, ID_PEP, ID_CARD, TIMESTART, ID_CARDTYPE, "ACTIVE") VALUES ('
-             . '1, ' . (int) $id_pep . ', ' . $card_dec . ', \'now\', 1, 1'
+        $sql = 'INSERT INTO CARD (ID_DB, ID_PEP, ID_CARD, TIMESTART, TIMEEND, ID_CARDTYPE, "ACTIVE") VALUES ('
+             . '1, ' . (int) $id_pep . ', ' . $card_dec . ', \'now\', CURRENT_DATE + 240, 1, 1'
              . ')';
 
         try {
@@ -182,7 +182,7 @@ class Model_ParsecTest extends Model
         } catch (Exception $e) {
             return $this->_err('247 INSERT CARD: ' . $e->getMessage(), 500);
         }
-
+//echo Debug::vars('185', $sql);exit;
         return array(
             'ok'            => true,
             'operation'     => 'add_card',

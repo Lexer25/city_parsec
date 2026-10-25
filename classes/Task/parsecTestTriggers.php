@@ -47,11 +47,12 @@ class Task_parsecTestTriggers extends Minion_Task
         }
 
         $scenario_name = (string) Arr::get($params, 'scenario', 'basic');
-        $do_cleanup    = (int)    Arr::get($params, 'cleanup', 1) === 0;
+        $do_cleanup    = (int)    Arr::get($params, 'cleanup', 1) === 1;
         $verbose       = (int)    Arr::get($params, 'verbose', 1) === 1;
 
         $this->_model  = new Model_ParsecTest();
-        $this->_suffix = date('YmdHis') . '_' . mt_rand(1000, 9999);
+        //$this->_suffix = date('YmdHis') . '_' . mt_rand(1000, 9999);
+		$this->_suffix = $this->generateGuid();
 
         $scenario = $this->_load_scenario($scenario_name);
         if ($scenario === null) {
@@ -394,4 +395,19 @@ class Task_parsecTestTriggers extends Minion_Task
                 : 'РЕЗУЛЬТАТ: FAIL'
         );
     }
+	
+private function generateGuid()
+{
+    if (function_exists('random_bytes')) {
+        $data = random_bytes(16);
+    } else {
+        // Резервный вариант для PHP 5.6
+        $data = openssl_random_pseudo_bytes(16);
+    }
+    
+    $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+    $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+}
 }
