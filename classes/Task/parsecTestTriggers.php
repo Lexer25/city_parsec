@@ -47,7 +47,7 @@ class Task_parsecTestTriggers extends Minion_Task
         }
 
         $scenario_name = (string) Arr::get($params, 'scenario', 'basic');
-        $do_cleanup    = (int)    Arr::get($params, 'cleanup', 1) === 1;
+        $do_cleanup    = (int)    Arr::get($params, 'cleanup', 1) === 0;
         $verbose       = (int)    Arr::get($params, 'verbose', 1) === 1;
 
         $this->_model  = new Model_ParsecTest();
@@ -253,8 +253,9 @@ class Task_parsecTestTriggers extends Minion_Task
 
     protected function _load_scenario($name)
     {
-       // if ($name === 'basic' || $name === '') {
-        if ($name === '') {
+       
+	   if ($name === 'basic' || $name === '') {
+      //  if ($name === '') {
             return $this->_default_scenario();
         }
 
@@ -297,12 +298,12 @@ class Task_parsecTestTriggers extends Minion_Task
     protected function _default_scenario()
     {
         return array(
-            'name'        => 'Базовый тест триггеров',
-            'description' => 'Организация > персона > категория доступа > карта',
+            'name'        => 'basic test scenario',
+            'description' => 'Организация > персона > > карта > категория доступа ',
             'steps'       => array(
                 array(
                     'id'          => 'org',
-                    'description' => 'Добавить организацию',
+                    'description' => 'add org',
                     'action'      => 'add_org',
                     'params'      => array(
                         'name'        => 'TEST-ORG-{suffix}',
@@ -313,7 +314,7 @@ class Task_parsecTestTriggers extends Minion_Task
                 ),
                 array(
                     'id'          => 'people',
-                    'description' => 'Добавить персону',
+                    'description' => 'add person',
                     'action'      => 'add_person',
                     'params'      => array(
                         'surname'    => 'Тестов',
@@ -325,7 +326,7 @@ class Task_parsecTestTriggers extends Minion_Task
                     ),
                     'expect_ops'  => array(3),
                 ),
-                array(
+/*                 array(
                     'id'          => 'access',
                     'description' => 'Выдать категорию доступа',
                     'action'      => 'add_access',
@@ -334,10 +335,10 @@ class Task_parsecTestTriggers extends Minion_Task
                         'accessname_id' => 64,
                     ),
                     'expect_ops'  => array(7),
-                ),
+                ), */
                 array(
                     'id'          => 'card',
-                    'description' => 'Выдать карту',
+                    'description' => 'add identifier',
                     'action'      => 'add_card',
                     'params'      => array(
                         'pep_guid' => '{ctx.people.guid}',
@@ -345,6 +346,16 @@ class Task_parsecTestTriggers extends Minion_Task
                     ),
                     'expect_ops'  => array(9),
                 ),
+				/*  array(
+                    'id'          => 'access',
+                    'description' => 'Выдать категорию доступа',
+                    'action'      => 'add_access',
+                    'params'      => array(
+                        'pep_guid'      => '{ctx.people.guid}',
+                        'accessname_id' => 64,
+                    ),
+                    'expect_ops'  => array(7),
+                ), */
             ),
         );
     }

@@ -76,7 +76,8 @@ class Model_ParsecTest extends Model
 
     public function add_person(array $p)
     {
-        $surname    = trim((string) Arr::get($p, 'surname', ''));
+      
+	   $surname    = trim((string) Arr::get($p, 'surname', ''));
         $name       = trim((string) Arr::get($p, 'name', ''));
         $patronymic = trim((string) Arr::get($p, 'patronymic', ''));
         $guid       = trim((string) Arr::get($p, 'guid', ''));
@@ -98,6 +99,7 @@ class Model_ParsecTest extends Model
         }
 
         $before = $this->max_cardindev_id();
+        //$newIdPep = $this->new_pep_id();
 
         $sql = 'INSERT INTO PEOPLE (ID_DB, SURNAME, NAME, PATRONYMIC, GUID, ID_ORG, TABNUM) VALUES ('
              . '1, '
@@ -406,15 +408,35 @@ class Model_ParsecTest extends Model
 
     public function max_cardindev_id()
     {
-        try {
-            $r = DB::query(Database::SELECT,
-                'SELECT MAX(ID_CARDINDEV) AS MX FROM CARDINDEV'
-            )->execute($this->_db)->as_array();
-            return (int) Arr::get($r[0], 'MX', 0);
+        $sql='select GEN_ID(GEN_CARDINDEV_ID,1) from RDB$DATABASE';
+		
+		
+		try {
+            $r = DB::query(Database::SELECT, $sql)
+		->execute(Database::instance('fb'))
+		->get('GEN_ID');
+            return (int) $r;
         } catch (Exception $e) {
             return 0;
         }
     }
+	
+	public function new_pep_id()
+    {
+        $sql='select GEN_ID(GEN_PEOPLE_ID,1) from RDB$DATABASE';
+		
+		
+		try {
+            $r = DB::query(Database::SELECT, $sql)
+		->execute(Database::instance('fb'))
+		->get('GEN_ID');
+            return (int) $r;
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+	
+	
 
     public function new_cardindev($after_id)
     {

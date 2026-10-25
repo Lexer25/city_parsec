@@ -29,18 +29,18 @@ class Model_Parsec extends Model {
 				  
 				  when cd.operation in (3)  THEN COALESCE( (SELECT p.surname||\' \'||p.name||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\', \'Not found id_pep=\'||cd.id_pep)
 				when cd.operation =4 then \'id_pep=\'||cd.id_pep
-					
+				 WHEN cd.operation in ( 5, 55) THEN (SELECT o.name   FROM organization o WHERE o.guid = cd.id_card)	
 					
 				  when cd.operation in( 7, 8)  THEN (SELECT an.name from accessname an where an.id_accessname=cd.id_card)
 
 						end as id_card,
 	
 				   -- колонка 3 кому id_pep
-							 case
-				when cd.operation in (1, 2, 9, 10,   7, 8, 35)  THEN COALESCE( (SELECT p.surname||\' \'||p.name||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\', \'Not found id_pep=\'||cd.id_pep)
-				WHEN cd.operation in( 3) THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
+		--					 case
+		--		when cd.operation in (1, 2, 9, 10,   7, 8, 35)  THEN COALESCE( (SELECT p.surname||\' \'||p.name||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\', \'Not found id_pep=\'||cd.id_pep)
+		--		WHEN cd.operation in( 3) THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
  
-						end as id_pep,
+		--				end as id_pep,
 
 
  				--cd.id_pep, 
@@ -49,11 +49,13 @@ class Model_Parsec extends Model {
 					cd.time_stamp,
 				-- организация кому добавляем или удаляем
 					 CASE
-				  WHEN cd.operation in (1,2,9, 10) THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
+				  WHEN cd.operation in (1,2, 10) THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
+				when cd.operation in (9)  THEN COALESCE( (SELECT p.surname||\' \'||p.name||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)||\' (\'||cd.id_pep||\')\', \'Not found id_pep=\'||cd.id_pep)
 				
 				  WHEN cd.operation in( 3, 35) THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
 				  
-				  WHEN cd.operation in ( 5, 55) THEN (SELECT o.name   FROM organization o WHERE o.guid = cd.id_card)
+				--  WHEN cd.operation in ( 5, 55) THEN (SELECT o.name   FROM organization o WHERE o.guid = cd.id_card)
+				  WHEN cd.operation in ( 5, 55) THEN (SELECT o2.name   FROM organization o join organization o2 on o2.id_org=o.id_parent WHERE o.guid = cd.id_card)
 				 -- WHEN cd.operation = 3 THEN (SELECT p.name||\' \'||p.surname||\' \'||p.patronymic   FROM people p WHERE p.id_pep = cd.id_pep)
 				  WHEN cd.operation = 7 THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
 				  WHEN cd.operation = 8 THEN (SELECT o.name from people p join organization o on p.id_org=o.id_org  WHERE p.id_pep = cd.id_pep)
