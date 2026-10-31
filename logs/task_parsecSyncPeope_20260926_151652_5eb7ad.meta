@@ -1,8 +1,0 @@
-{
-    "task": "parsecSyncPeope",
-    "options": [],
-    "pid": 0,
-    "cmd": "c:\\xampp\\php\\php.exe c:\\xampp\\htdocs\\city\\modules\\minion\\minion --task=parsecSyncPeope",
-    "started": "2026-09-26 15:16:52",
-    "user": ""
-}

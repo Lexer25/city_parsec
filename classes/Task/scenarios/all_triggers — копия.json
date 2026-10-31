@@ -1,0 +1,109 @@
+{
+    "name": "Полный тест всех триггеров Parsec",
+    "description": "Проверяет все 10 триггеров: 5, 55, 3, 35, 9, 7, 8, 10, 4, 6. Порядок шагов важен — триггеры 7, 8 требуют наличия карты, 10 — существования персоны.",
+    "steps": [
+        {
+            "id": "org",
+            "description": "1) Создать организацию — триггер 5",
+            "action": "add_org",
+            "params": {
+                "name": "TEST-ORG-{suffix}",
+                "guid": "TEST-ORG-{suffix}",
+                "parent_guid": ""
+            },
+            "expect_ops": [5]
+        },
+        {
+            "id": "org_upd",
+            "description": "2) Изменить название организации — триггер 55",
+            "action": "update_org",
+            "params": {
+                "guid": "TEST-ORG-{suffix}",
+                "name": "TEST-ORG-RENAMED-{suffix}"
+            },
+            "expect_ops": [55]
+        },
+        {
+            "id": "pep",
+            "description": "3) Создать персону в организации — триггер 3",
+            "action": "add_person",
+            "params": {
+                "surname": "Тестов",
+                "name": "Иван",
+                "patronymic": "Тестович",
+                "guid": "TEST-PEP-{suffix}",
+                "org_guid": "TEST-ORG-{suffix}",
+                "tabnum": "T-{suffix}"
+            },
+            "expect_ops": [3]
+        },
+        {
+            "id": "pep_upd",
+            "description": "4) Изменить ФИО персоны — триггер 35",
+            "action": "update_person",
+            "params": {
+                "guid": "TEST-PEP-{suffix}",
+                "surname": "Тестов-Изменённый"
+            },
+            "expect_ops": [35]
+        },
+        {
+            "id": "card",
+            "description": "5) Выдать карту персоне — триггер 9",
+            "action": "add_card",
+            "params": {
+                "pep_guid": "TEST-PEP-{suffix}",
+                "card": "{cardnum}"
+            },
+            "expect_ops": [9]
+        },
+        {
+            "id": "access",
+            "description": "6) Выдать категорию доступа — триггер 7 (требует карты)",
+            "action": "add_access",
+            "params": {
+                "pep_guid": "TEST-PEP-{suffix}",
+                "accessname_id": 64
+            },
+            "expect_ops": [7]
+        },
+        {
+            "id": "access_del",
+            "description": "7) Удалить категорию доступа — триггер 8 (у персоны ещё есть карта)",
+            "action": "del_access",
+            "params": {
+                "pep_guid": "TEST-PEP-{suffix}",
+                "accessname_id": 64
+            },
+            "expect_ops": [8]
+        },
+        {
+            "id": "card_del",
+            "description": "8) Удалить карту — триггер 10 (персона ещё существует)",
+            "action": "del_card",
+            "params": {
+                "pep_guid": "TEST-PEP-{suffix}",
+                "card": "{ctx.card.card}"
+            },
+            "expect_ops": [10]
+        },
+        {
+            "id": "pep_del",
+            "description": "9) Удалить персону — триггер 4",
+            "action": "del_person",
+            "params": {
+                "guid": "TEST-PEP-{suffix}"
+            },
+            "expect_ops": [4]
+        },
+        {
+            "id": "org_del",
+            "description": "10) Удалить организацию — триггер 6",
+            "action": "del_org",
+            "params": {
+                "guid": "TEST-ORG-{suffix}"
+            },
+            "expect_ops": [6]
+        }
+    ]
+}

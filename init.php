@@ -14,6 +14,10 @@ Kohana::$config->load('menu')
                 'title' => 'Контроль',
                 'url' => 'parsec'
             ),
+            'tasks2' => array(
+                'title' => 'Контроль новый',
+                'url' => 'parsec2'
+            ),
             'setting' => array(
                 'title' => 'Настройки',
                 'url' => 'cch'
@@ -38,6 +42,13 @@ Kohana::$config->load('menu')
 Route::set('parsec_test', 'parsectest(/<action>)')
     ->defaults(array(
         'controller' => 'ParsecTest',
+        'action'     => 'index',
+    ));
+	
+	
+Route::set('parsec2', 'parsec2(/<action>(/<id>))')
+    ->defaults(array(
+        'controller' => 'Parsec2',
         'action'     => 'index',
     ));
 	
